@@ -20,23 +20,21 @@ void AuthController::handleLogin(const HttpRequestPtr& req,
 {
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
 
-    std::string cardId   = req->getParameter("card_id");
+    std::string phone    = req->getParameter("phone");
     std::string password = req->getParameter("password");
 
     Json::Value body;
-    body["card_id"]  = cardId;
-    body["phone"]    = cardId;   // API ikkalasini ham qabul qiladi
+    body["phone"]    = phone;
     body["password"] = password;
 
     apiPost("/api/readers/login/", body,
-        [req, cb = std::move(cb), cardId](int status, const Json::Value& data) mutable {
+        [req, cb = std::move(cb), phone](int status, const Json::Value& data) mutable {
             if (status == 200 && data.isObject() && data.isMember("token")) {
                 auto s = req->session();
                 s->insert("reader_token",   data["token"].asString());
-                s->insert("reader_name",    jstr(data, "fullname", cardId));
-                s->insert("reader_card_id", jstr(data, "card_id",  cardId));
+                s->insert("reader_name",    jstr(data, "fullname", phone));
+                s->insert("reader_card_id", jstr(data, "card_id",  phone));
 
-                // is_active reader ichida bo'lishi mumkin
                 bool isActive = true;
                 if (data.isMember("reader") && data["reader"].isObject() &&
                     data["reader"].isMember("is_active")) {
@@ -49,7 +47,7 @@ void AuthController::handleLogin(const HttpRequestPtr& req,
                     s->insert("reader_id", std::to_string(data["id"].asInt()));
                 cb(redirect("/kabinet"));
             } else {
-                std::string err = "Noto'g'ri karta ID yoki parol.";
+                std::string err = "Noto'g'ri telefon raqam yoki parol.";
                 if (data.isObject()) {
                     if (data.isMember("error"))  err = data["error"].asString();
                     if (data.isMember("detail")) err = data["detail"].asString();
@@ -80,7 +78,6 @@ void AuthController::handleReg(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
 
     std::string fullname  = req->getParameter("fullname");
-    std::string cardId    = req->getParameter("card_id");
     std::string phone     = req->getParameter("phone");
     std::string password  = req->getParameter("password");
     std::string password2 = req->getParameter("password2");
@@ -93,14 +90,17 @@ void AuthController::handleReg(const HttpRequestPtr& req,
         return;
     }
 
+    // card_id avtomatik: "TATU" + UUID ning birinchi 6 belgisi
+    std::string uid = drogon::utils::getUuid();
+    uid.erase(std::remove(uid.begin(), uid.end(), '-'), uid.end());
+    std::string cardId = "TATU" + uid.substr(0, 6);
+    std::transform(cardId.begin(), cardId.end(), cardId.begin(), ::toupper);
+
     Json::Value body;
     body["fullname"] = fullname;
     body["card_id"]  = cardId;
     body["phone"]    = phone;
     body["password"] = password;
-
-    // Rasm — multipart/form-data uchun alohida (hozircha base64 yo'q)
-    // Karta rasmi faylni upload etish keyingi versiyada
 
     apiPost("/api/readers/register/", body,
         [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {
