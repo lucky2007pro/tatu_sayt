@@ -1,0 +1,189 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATU Kutubxona | Kutubxona</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background: #f1f5f9; } </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& lib      = @@.get<Row>("library");
+    auto& books    = @@.get<RowList>("books");
+    auto  loggedIn = @@.get<bool>("is_logged_in");
+    auto& name     = @@.get<std::string>("reader_name");
+
+    auto libName   = getOr(lib, "name", "Kutubxona");
+    auto address   = getOr(lib, "address");
+    auto phone     = getOr(lib, "phone");
+    auto email     = getOr(lib, "email");
+    auto hours     = getOr(lib, "working_hours");
+    auto lat       = getOr(lib, "latitude");
+    auto lon       = getOr(lib, "longitude");
+%>
+
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
+            <span class="font-bold text-slate-800">TATU Kutubxona</span>
+        </a>
+        <div class="flex items-center gap-2">
+            <a href="/kutubxonalar" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-arrow-left mr-1"></i>Kutubxonalar
+            </a>
+            <%c++ if (loggedIn) { %>
+            <a href="/kabinet" class="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">
+                <i class="fas fa-user mr-1"></i><%c++ LibraryDetail_tmp_stream << name; %>
+            </a>
+            <%c++ } else { %>
+            <a href="/kirish" class="text-xs font-semibold bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition">Kirish</a>
+            <%c++ } %>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+
+    <!-- Kutubxona info kartasi -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-sky-500 px-6 py-8 text-white">
+            <div class="flex items-start gap-5">
+                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-building text-3xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h1 class="text-2xl font-extrabold mb-1"><%c++ LibraryDetail_tmp_stream << libName; %></h1>
+                    <%c++ if (!address.empty()) { %>
+                    <p class="text-blue-100 text-sm flex items-center gap-1.5">
+                        <i class="fas fa-map-marker-alt"></i><%c++ LibraryDetail_tmp_stream << address; %>
+                    </p>
+                    <%c++ } %>
+                </div>
+                <div class="flex-shrink-0">
+                    <span class="bg-white/20 text-white text-sm font-bold px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-book mr-1"></i><%c++ LibraryDetail_tmp_stream << books.size(); %> kitob
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <%c++ if (!phone.empty()) { %>
+            <div class="flex items-center gap-3 text-slate-600">
+                <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-phone text-blue-500 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">Telefon</p>
+                    <p class="text-sm font-semibold"><%c++ LibraryDetail_tmp_stream << phone; %></p>
+                </div>
+            </div>
+            <%c++ } %>
+            <%c++ if (!email.empty()) { %>
+            <div class="flex items-center gap-3 text-slate-600">
+                <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-envelope text-purple-500 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">Email</p>
+                    <p class="text-sm font-semibold"><%c++ LibraryDetail_tmp_stream << email; %></p>
+                </div>
+            </div>
+            <%c++ } %>
+            <%c++ if (!hours.empty()) { %>
+            <div class="flex items-center gap-3 text-slate-600">
+                <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-clock text-green-500 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">Ish vaqti</p>
+                    <p class="text-sm font-semibold"><%c++ LibraryDetail_tmp_stream << hours; %></p>
+                </div>
+            </div>
+            <%c++ } %>
+        </div>
+
+        <!-- Xarita -->
+        <%c++ if (!lat.empty() && !lon.empty() && lat != "0" && lon != "0") { %>
+        <div class="border-t border-slate-100">
+            <iframe
+                src="https://maps.google.com/maps?q=<%c++ LibraryDetail_tmp_stream << lat; %>,<%c++ LibraryDetail_tmp_stream << lon; %>&z=15&output=embed"
+                class="w-full h-64 border-0"
+                loading="lazy"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <div class="px-6 py-3 border-t border-slate-100">
+            <a href="https://www.google.com/maps?q=<%c++ LibraryDetail_tmp_stream << lat; %>,<%c++ LibraryDetail_tmp_stream << lon; %>"
+               target="_blank"
+               class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+                <i class="fas fa-directions"></i> Google Maps da ochish
+            </a>
+        </div>
+        <%c++ } %>
+    </div>
+
+    <!-- Kitoblar ro'yxati -->
+    <div>
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-book-open text-blue-600"></i> Ushbu kutubxona kitoblari
+            <span class="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"><%c++ LibraryDetail_tmp_stream << books.size(); %></span>
+        </h2>
+
+        <%c++ if (books.empty()) { %>
+        <div class="bg-white rounded-2xl border border-slate-200 p-10 text-center text-slate-400">
+            <i class="fas fa-book-open text-4xl mb-3 block text-slate-200"></i>
+            <p class="text-sm">Bu kutubxona uchun kitoblar topilmadi.</p>
+        </div>
+        <%c++ } else { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <%c++ for (auto& b : books) {
+                auto bid     = getOr(b, "id");
+                auto btitle  = getOr(b, "title", "Noma'lum kitob");
+                auto bauthor = getOr(b, "author_name");
+                auto bsec    = getOr(b, "section_name");
+                auto brating = getOr(b, "average_rating");
+                auto bavail  = getOr(b, "is_available", "False");
+                bool isAvail = (bavail == "True");
+            %>
+            <a href="/kitob/<%c++ LibraryDetail_tmp_stream << bid; %>"
+               class="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-blue-300 transition flex flex-col gap-2">
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="font-semibold text-slate-800 text-sm leading-snug flex-1"><%c++ LibraryDetail_tmp_stream << btitle; %></h3>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0
+                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                        <%c++ if (isAvail) { %>✅<%c++ } else { %>🔒<%c++ } %>
+                    </span>
+                </div>
+                <%c++ if (!bauthor.empty()) { %>
+                <p class="text-xs text-slate-400"><i class="fas fa-user-edit mr-1"></i><%c++ LibraryDetail_tmp_stream << bauthor; %></p>
+                <%c++ } %>
+                <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-100">
+                    <%c++ if (!bsec.empty()) { %>
+                    <span class="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md"><%c++ LibraryDetail_tmp_stream << bsec; %></span>
+                    <%c++ } %>
+                    <%c++ if (!brating.empty() && brating != "0" && brating != "0.0") { %>
+                    <span class="text-xs text-yellow-600 font-bold">★ <%c++ LibraryDetail_tmp_stream << brating; %></span>
+                    <%c++ } %>
+                </div>
+            </a>
+            <%c++ } %>
+        </div>
+        <%c++ } %>
+    </div>
+</main>
+
+<footer class="bg-slate-800 text-slate-400 text-xs py-5 px-4 text-center mt-auto">
+    © 2026 TATU Kutubxona
+</footer>
+</body>
+</html>

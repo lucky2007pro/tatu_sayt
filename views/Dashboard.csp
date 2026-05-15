@@ -1,0 +1,288 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATU Kutubxona | Kabinet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background: #f1f5f9; } </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& name         = @@.get<std::string>("reader_name");
+    auto& cardId       = @@.get<std::string>("reader_card_id");
+    auto  approved     = @@.get<bool>("reader_approved");
+    auto& reservations = @@.get<RowList>("reservations");
+    auto& issues       = @@.get<RowList>("issues");
+    auto& waitlist     = @@.get<RowList>("waitlist");
+    auto& flashMsg     = @@.get<std::string>("flash_msg");
+    auto& flashType    = @@.get<std::string>("flash_type");
+    auto& csrf         = @@.get<std::string>("csrf_token");
+%>
+
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
+            <span class="font-bold text-slate-800">TATU Kutubxona</span>
+        </a>
+        <div class="flex items-center gap-2">
+            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-home mr-1"></i>Kitoblar
+            </a>
+            <a href="/kutubxonalar" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar
+            </a>
+            <a href="/profil" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-user-circle mr-1"></i>Profil
+            </a>
+            <a href="/chiqish" class="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                <i class="fas fa-sign-out-alt mr-1"></i>Chiqish
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Flash -->
+<%c++ if (!flashMsg.empty()) { %>
+<div class="max-w-4xl mx-auto px-4 pt-4">
+    <div class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
+        <%c++ if (flashType == "success") { %>✅<%c++ } else { %>⚠️<%c++ } %>
+        <%c++ Dashboard_tmp_stream << flashMsg; %>
+    </div>
+</div>
+<%c++ } %>
+
+<main class="max-w-4xl mx-auto px-4 py-8 flex-1">
+
+    <!-- Profil kartasi -->
+    <div class="bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-2xl p-6 md:p-8 mb-6 flex items-center gap-5">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="flex-1">
+            <h2 class="text-xl font-extrabold"><%c++ Dashboard_tmp_stream << name; %></h2>
+            <p class="text-blue-100 text-sm mt-0.5"><i class="fas fa-id-card mr-1"></i><%c++ Dashboard_tmp_stream << cardId; %></p>
+            <div class="mt-2">
+                <%c++ if (approved) { %>
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/20 text-white px-3 py-1 rounded-full">
+                    <i class="fas fa-check-circle text-green-300"></i> Tasdiqlangan o'quvchi
+                </span>
+                <%c++ } else { %>
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-400/30 text-white px-3 py-1 rounded-full">
+                    <i class="fas fa-clock text-orange-200"></i> Admin tasdiqlashini kutmoqda
+                </span>
+                <%c++ } %>
+            </div>
+        </div>
+        <div class="flex items-center gap-6 flex-shrink-0">
+            <div class="text-center hidden md:block">
+                <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << reservations.size(); %></div>
+                <div class="text-xs text-blue-200 mt-0.5">Faol bron</div>
+            </div>
+            <div class="text-center hidden md:block">
+                <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << issues.size(); %></div>
+                <div class="text-xs text-blue-200 mt-0.5">O'qigan</div>
+            </div>
+        </div>
+    </div>
+
+    <%c++ if (!approved) { %>
+    <div class="bg-orange-50 border border-orange-200 text-orange-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-start gap-2">
+        <span>⚠️</span>
+        <span>Hisobingiz hali tasdiqlanmagan. Admin tasdiqlashidan keyin kitoblarni band qila olasiz.</span>
+    </div>
+    <%c++ } %>
+
+    <!-- Bronlar -->
+    <div class="mb-8">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-check text-blue-600"></i> Mening bronlarim
+            <span class="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << reservations.size(); %></span>
+        </h3>
+
+        <%c++ if (!reservations.empty()) { %>
+        <div class="space-y-3">
+            <%c++ for (auto& res : reservations) {
+                auto rid     = getOr(res, "id");
+                auto bookRef = getOr(res, "book");
+                auto bt      = getOr(res, "book_title");
+                if (bt.empty()) bt = std::string("Kitob #") + bookRef;
+                auto rdate   = getOr(res, "reserved_at");
+                auto note    = getOr(res, "note");
+            %>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-4 hover:shadow-md transition">
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-800 text-sm truncate">
+                        <i class="fas fa-bookmark text-blue-500 mr-1.5"></i>
+                        <%c++ Dashboard_tmp_stream << bt; %>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 mt-1.5">
+                        <%c++ if (!rdate.empty()) { %>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-calendar mr-1"></i><%c++ Dashboard_tmp_stream << (rdate.size() > 10 ? rdate.substr(0, 10) : rdate); %>
+                        </span>
+                        <%c++ } %>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+                            🔖 Band qilingan
+                        </span>
+                        <%c++ if (!note.empty()) { %>
+                        <span class="text-xs text-slate-400 italic truncate"><%c++ Dashboard_tmp_stream << note; %></span>
+                        <%c++ } %>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <%c++ if (!bookRef.empty()) { %>
+                    <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>"
+                       class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <%c++ } %>
+                    <form method="POST" action="/bron/<%c++ Dashboard_tmp_stream << rid; %>/bekor"
+                          onsubmit="return confirm('Bronni bekor qilasizmi?')">
+                        <input type="hidden" name="csrf_token" value="<%c++ Dashboard_tmp_stream << csrf; %>">
+                        <button type="submit" class="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                            <i class="fas fa-times mr-1"></i>Bekor
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <%c++ } %>
+        </div>
+        <%c++ } else { %>
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+            <i class="fas fa-calendar-times text-3xl mb-2 block text-slate-200"></i>
+            <p class="text-sm">Hali hech qanday bron yo'q.</p>
+            <a href="/" class="inline-block mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                Kitoblarni ko'rish →
+            </a>
+        </div>
+        <%c++ } %>
+    </div>
+
+    <!-- O'qish tarixi (Issues) -->
+    <div>
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-history text-purple-600"></i> O'qish tarixim
+            <span class="ml-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << issues.size(); %></span>
+        </h3>
+
+        <%c++ if (!issues.empty()) { %>
+        <div class="space-y-3">
+            <%c++ for (auto& iss : issues) {
+                auto bookRef = getOr(iss, "book");
+                auto bt      = getOr(iss, "book_title");
+                if (bt.empty()) bt = std::string("Kitob #") + bookRef;
+                auto idate   = getOr(iss, "issue_date");
+                auto rdate   = getOr(iss, "return_date");
+                // Sana taqqoslash uchun bugun
+                bool overdue = false; // backend bilan tekshirish kerak
+            %>
+            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-4 hover:shadow-md transition">
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-800 text-sm truncate">
+                        <i class="fas fa-book-open text-purple-500 mr-1.5"></i>
+                        <%c++ Dashboard_tmp_stream << bt; %>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 mt-1.5">
+                        <%c++ if (!idate.empty()) { %>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-arrow-right mr-1"></i>Olingan: <%c++ Dashboard_tmp_stream << idate; %>
+                        </span>
+                        <%c++ } %>
+                        <%c++ if (!rdate.empty()) { %>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-undo mr-1"></i>Qaytarish: <%c++ Dashboard_tmp_stream << rdate; %>
+                        </span>
+                        <%c++ } %>
+                    </div>
+                </div>
+                <%c++ if (!bookRef.empty()) { %>
+                <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>"
+                   class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-purple-400 hover:text-purple-600 transition flex-shrink-0">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <%c++ } %>
+            </div>
+            <%c++ } %>
+        </div>
+        <%c++ } else { %>
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+            <i class="fas fa-book text-3xl mb-2 block text-slate-200"></i>
+            <p class="text-sm">Hali kitoblar olmagansiz.</p>
+        </div>
+        <%c++ } %>
+    </div>
+
+    <!-- Navbat ro'yxati -->
+    <%c++ if (!waitlist.empty()) { %>
+    <div class="mt-8">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-hourglass-half text-amber-500"></i> Navbatim
+            <span class="ml-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << waitlist.size(); %></span>
+        </h3>
+        <div class="space-y-3">
+            <%c++ for (auto& w : waitlist) {
+                auto wid    = getOr(w, "id");
+                auto bref   = getOr(w, "book");
+                auto bt     = getOr(w, "book_title");
+                if (bt.empty()) bt = std::string("Kitob #") + bref;
+                auto pos    = getOr(w, "position", "?");
+                auto wdate  = getOr(w, "created_at");
+            %>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-800 text-sm truncate">
+                        <i class="fas fa-clock text-amber-500 mr-1.5"></i>
+                        <%c++ Dashboard_tmp_stream << bt; %>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 mt-1.5">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
+                            🔢 Navbat: <%c++ Dashboard_tmp_stream << pos; %>
+                        </span>
+                        <%c++ if (!wdate.empty()) { %>
+                        <span class="text-xs text-slate-400"><i class="fas fa-calendar mr-1"></i><%c++ Dashboard_tmp_stream << (wdate.size() > 10 ? wdate.substr(0, 10) : wdate); %></span>
+                        <%c++ } %>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <%c++ if (!bref.empty()) { %>
+                    <a href="/kitob/<%c++ Dashboard_tmp_stream << bref; %>"
+                       class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <%c++ } %>
+                    <form method="POST" action="/kitob/<%c++ Dashboard_tmp_stream << bref; %>/navbat/chiqish"
+                          onsubmit="return confirm('Navbatdan chiqasizmi?')">
+                        <input type="hidden" name="csrf_token" value="<%c++ Dashboard_tmp_stream << csrf; %>">
+                        <button class="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                            <i class="fas fa-times mr-1"></i>Chiqish
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <%c++ } %>
+        </div>
+    </div>
+    <%c++ } %>
+
+    <div class="mt-6">
+        <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
+            <i class="fas fa-search"></i> Yangi kitob qidirish
+        </a>
+    </div>
+</main>
+
+<footer class="bg-slate-800 text-slate-400 text-xs py-5 px-4 text-center mt-auto">
+    © 2026 TATU Kutubxona
+</footer>
+</body>
+</html>

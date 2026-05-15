@@ -1,0 +1,140 @@
+#define NOMINMAX
+#include "AuthController.h"
+#include "ApiHelper.h"
+#include <drogon/HttpViewData.h>
+
+// ── Login forma ───────────────────────────────────────────────────────────────
+void AuthController::loginForm(const HttpRequestPtr& req,
+                               std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    if (isLoggedIn(req)) { cb(redirect("/kabinet")); return; }
+    HttpViewData data;
+    data.insert("csrf_token", ensureCsrf(req));
+    data.insert("error_msg", std::string(""));
+    cb(HttpResponse::newHttpViewResponse("Login", data));
+}
+
+// ── Login qayta ishlash ───────────────────────────────────────────────────────
+void AuthController::handleLogin(const HttpRequestPtr& req,
+                                 std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+
+    std::string cardId   = req->getParameter("card_id");
+    std::string password = req->getParameter("password");
+
+    Json::Value body;
+    body["card_id"]  = cardId;
+    body["phone"]    = cardId;   // API ikkalasini ham qabul qiladi
+    body["password"] = password;
+
+    apiPost("/api/readers/login/", body,
+        [req, cb = std::move(cb), cardId](int status, const Json::Value& data) mutable {
+            if (status == 200 && data.isObject() && data.isMember("token")) {
+                auto s = req->session();
+                s->insert("reader_token",   data["token"].asString());
+                s->insert("reader_name",    jstr(data, "fullname", cardId));
+                s->insert("reader_card_id", jstr(data, "card_id",  cardId));
+
+                // is_active reader ichida bo'lishi mumkin
+                bool isActive = true;
+                if (data.isMember("reader") && data["reader"].isObject() &&
+                    data["reader"].isMember("is_active")) {
+                    isActive = data["reader"]["is_active"].asBool();
+                } else if (data.isMember("is_active")) {
+                    isActive = data["is_active"].asBool();
+                }
+                s->insert("reader_approved", isActive);
+                if (data.isMember("id") && data["id"].isInt())
+                    s->insert("reader_id", std::to_string(data["id"].asInt()));
+                cb(redirect("/kabinet"));
+            } else {
+                std::string err = "Noto'g'ri karta ID yoki parol.";
+                if (data.isObject()) {
+                    if (data.isMember("error"))  err = data["error"].asString();
+                    if (data.isMember("detail")) err = data["detail"].asString();
+                }
+                HttpViewData vd;
+                vd.insert("csrf_token", ensureCsrf(req));
+                vd.insert("error_msg",  err);
+                cb(HttpResponse::newHttpViewResponse("Login", vd));
+            }
+        });
+}
+
+// ── Register forma ────────────────────────────────────────────────────────────
+void AuthController::registerForm(const HttpRequestPtr& req,
+                                  std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    if (isLoggedIn(req)) { cb(redirect("/kabinet")); return; }
+    HttpViewData data;
+    data.insert("csrf_token", ensureCsrf(req));
+    data.insert("error_msg",  std::string(""));
+    cb(HttpResponse::newHttpViewResponse("Register", data));
+}
+
+// ── Register qayta ishlash ────────────────────────────────────────────────────
+void AuthController::handleReg(const HttpRequestPtr& req,
+                               std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+
+    std::string fullname  = req->getParameter("fullname");
+    std::string cardId    = req->getParameter("card_id");
+    std::string phone     = req->getParameter("phone");
+    std::string password  = req->getParameter("password");
+    std::string password2 = req->getParameter("password2");
+
+    if (password != password2) {
+        HttpViewData vd;
+        vd.insert("csrf_token", ensureCsrf(req));
+        vd.insert("error_msg",  std::string("Parollar mos kelmadi."));
+        cb(HttpResponse::newHttpViewResponse("Register", vd));
+        return;
+    }
+
+    Json::Value body;
+    body["fullname"] = fullname;
+    body["card_id"]  = cardId;
+    body["phone"]    = phone;
+    body["password"] = password;
+
+    // Rasm — multipart/form-data uchun alohida (hozircha base64 yo'q)
+    // Karta rasmi faylni upload etish keyingi versiyada
+
+    apiPost("/api/readers/register/", body,
+        [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {
+            if (status == 200 || status == 201) {
+                cb(redirect("/kirish?registered=1"));
+            } else {
+                std::string err;
+                if (data.isObject()) {
+                    for (const auto& key : data.getMemberNames()) {
+                        const auto& v = data[key];
+                        if (v.isArray() && !v.empty())
+                            err += key + ": " + v[0].asString() + " ";
+                        else if (v.isString())
+                            err += key + ": " + v.asString() + " ";
+                    }
+                }
+                if (err.empty()) err = "Ro'yxatdan o'tishda xato.";
+                HttpViewData vd;
+                vd.insert("csrf_token", ensureCsrf(req));
+                vd.insert("error_msg",  err);
+                cb(HttpResponse::newHttpViewResponse("Register", vd));
+            }
+        });
+}
+
+// ── Chiqish ───────────────────────────────────────────────────────────────────
+void AuthController::logout(const HttpRequestPtr& req,
+                            std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    auto s = req->session();
+    s->erase("reader_token");
+    s->erase("reader_name");
+    s->erase("reader_card_id");
+    s->erase("reader_approved");
+    s->erase("reader_id");
+    cb(redirect("/"));
+}

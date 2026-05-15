@@ -1,0 +1,320 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATU Kutubxona | Kitob</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .btn-primary { background: #2563eb; color: white; border-radius: 10px; font-weight: 700; transition: all .2s; padding: 10px 20px; font-size: 14px; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: white; border-radius: 10px; font-weight: 700; transition: all .2s; padding: 10px 20px; font-size: 14px; border: none; cursor: pointer; }
+        .btn-success:hover { background: #15803d; }
+        .btn-warning { background: #d97706; color: white; border-radius: 10px; font-weight: 700; transition: all .2s; padding: 10px 20px; font-size: 14px; border: none; cursor: pointer; }
+        .btn-warning:hover { background: #b45309; }
+        .input-field { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; width: 100%; outline: none; transition: all .2s; font-size: 14px; }
+        .input-field:focus { border-color: #2563eb; background: #fff; }
+        .star-label { cursor: pointer; font-size: 1.8rem; color: #d1d5db; transition: color .1s; }
+        .star-label:hover, .star-label.selected { color: #f59e0b; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& book      = @@.get<Row>("book");
+    auto& ratings   = @@.get<RowList>("ratings");
+    auto  loggedIn  = @@.get<bool>("is_logged_in");
+    auto  approved  = @@.get<bool>("reader_approved");
+    auto& name      = @@.get<std::string>("reader_name");
+    auto& csrf      = @@.get<std::string>("csrf_token");
+    auto& flashMsg  = @@.get<std::string>("flash_msg");
+    auto& flashType = @@.get<std::string>("flash_type");
+    auto& similar   = @@.get<RowList>("similar");
+    auto bookId     = getOr(book, "id");
+    auto bookName   = getOr(book, "title", "Kitob");
+    bool isAvail    = (getOr(book, "is_available", "True") == "True");
+    bool canReserve = isAvail;
+%>
+
+<!-- NAVBAR -->
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
+            <span class="font-bold text-slate-800">TATU Kutubxona</span>
+        </a>
+        <div class="flex items-center gap-2">
+            <%c++ if (loggedIn) { %>
+            <a href="/kabinet" class="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">
+                <i class="fas fa-user mr-1"></i><%c++ BookDetail_tmp_stream << name; %>
+            </a>
+            <a href="/chiqish" class="text-xs text-red-500 hover:text-red-700 px-2 py-1.5 rounded-lg hover:bg-red-50 transition">Chiqish</a>
+            <%c++ } else { %>
+            <a href="/kirish" class="text-xs font-semibold bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition">Kirish</a>
+            <%c++ } %>
+        </div>
+    </div>
+</nav>
+
+<!-- Flash xabar -->
+<%c++ if (!flashMsg.empty()) { %>
+<div class="max-w-4xl mx-auto px-4 pt-4">
+    <div class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
+        <%c++ if (flashType == "success") { %>✅<%c++ } else { %>⚠️<%c++ } %>
+        <%c++ BookDetail_tmp_stream << flashMsg; %>
+    </div>
+</div>
+<%c++ } %>
+
+<main class="max-w-4xl mx-auto px-4 py-8 flex-1">
+    <a href="/" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 mb-6 transition">
+        <i class="fas fa-arrow-left text-xs"></i> Kitoblarga qaytish
+    </a>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex flex-col md:flex-row gap-0">
+            <!-- Muqova -->
+            <div class="md:w-56 flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center min-h-64 relative">
+                <%c++ auto cover = getOr(book, "cover_image"); if (!cover.empty()) { %>
+                <img src="<%c++ BookDetail_tmp_stream << cover; %>" class="w-full h-full object-cover" alt="">
+                <%c++ } else { %>
+                <i class="fas fa-book text-slate-300 text-6xl"></i>
+                <%c++ } %>
+                <div class="absolute top-3 right-3">
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full
+                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                        <%c++ if (isAvail) { %>✅ Mavjud<%c++ } else { %>🔒 Band qilingan<%c++ } %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Ma'lumotlar -->
+            <div class="flex-1 p-6 md:p-8">
+                <h1 class="text-2xl font-extrabold text-slate-800 mb-1"><%c++ BookDetail_tmp_stream << bookName; %></h1>
+                <%c++ auto author = getOr(book, "author_name"); if (!author.empty()) { %>
+                <p class="text-slate-500 text-sm mb-4"><i class="fas fa-user-edit mr-1"></i><%c++ BookDetail_tmp_stream << author; %></p>
+                <%c++ } %>
+
+                <div class="flex flex-wrap gap-2 mb-5">
+                    <%c++ auto lib = getOr(book, "library_name"); if (!lib.empty()) { %>
+                    <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">
+                        <i class="fas fa-building mr-1"></i><%c++ BookDetail_tmp_stream << lib; %>
+                    </span>
+                    <%c++ } %>
+                    <%c++ auto sec = getOr(book, "section_name"); if (!sec.empty()) { %>
+                    <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">
+                        <i class="fas fa-bookmark mr-1"></i><%c++ BookDetail_tmp_stream << sec; %>
+                    </span>
+                    <%c++ } %>
+                    <%c++ auto rating = getOr(book, "average_rating"); if (!rating.empty() && rating != "0" && rating != "0.0") { %>
+                    <span class="text-xs bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full font-bold">
+                        ★ <%c++ BookDetail_tmp_stream << rating; %> / 5
+                    </span>
+                    <%c++ } %>
+                    <%c++ auto views = getOr(book, "view_count"); if (!views.empty() && views != "0") { %>
+                    <span class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full">
+                        <i class="fas fa-eye mr-1"></i><%c++ BookDetail_tmp_stream << views; %>
+                    </span>
+                    <%c++ } %>
+                    <%c++ auto ebook = getOr(book, "ebook_file"); if (!ebook.empty() && ebook != "null") { %>
+                    <a href="<%c++ BookDetail_tmp_stream << ebook; %>" target="_blank" class="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1 rounded-full font-bold inline-flex items-center transition">
+                        <i class="fas fa-tablet-alt mr-1"></i>E-kitob — yuklab olish
+                    </a>
+                    <%c++ } %>
+                </div>
+
+                <%c++ auto descr = getOr(book, "description"); if (!descr.empty()) { %>
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-slate-700 mb-2">Tavsif</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed"><%c++ BookDetail_tmp_stream << descr; %></p>
+                </div>
+                <%c++ } %>
+
+                <!-- Harakatlar -->
+                <div class="flex flex-wrap gap-3 pt-4 border-t border-slate-100">
+                    <%c++ if (loggedIn) { %>
+                        <!-- Band qilish -->
+                        <%c++ if (canReserve) { %>
+                            <%c++ if (approved) { %>
+                            <form method="POST" action="/kitob/<%c++ BookDetail_tmp_stream << bookId; %>/band">
+                                <input type="hidden" name="csrf_token" value="<%c++ BookDetail_tmp_stream << csrf; %>">
+                                <button type="submit" class="btn-success">
+                                    <i class="fas fa-calendar-check mr-1"></i> Band qilish
+                                </button>
+                            </form>
+                            <%c++ } else { %>
+                            <button disabled class="px-5 py-2.5 text-sm font-bold bg-slate-100 text-slate-400 rounded-xl cursor-not-allowed">
+                                <i class="fas fa-clock mr-1"></i> Tasdiqlanmagan hisob
+                            </button>
+                            <%c++ } %>
+                        <%c++ } else { %>
+                        <form method="POST" action="/kitob/<%c++ BookDetail_tmp_stream << bookId; %>/navbat">
+                            <input type="hidden" name="csrf_token" value="<%c++ BookDetail_tmp_stream << csrf; %>">
+                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition">
+                                <i class="fas fa-clock"></i> Navbatga yozilish
+                            </button>
+                        </form>
+                        <%c++ } %>
+
+                        <!-- Baholash -->
+                        <button onclick="document.getElementById('rate-modal').style.display='flex'"
+                            class="btn-warning">
+                            <i class="fas fa-star mr-1"></i> Baholash
+                        </button>
+
+                    <%c++ } else { %>
+                    <a href="/kirish" class="btn-primary inline-flex items-center gap-2">
+                        <i class="fas fa-sign-in-alt"></i> Band qilish uchun kiring
+                    </a>
+                    <%c++ } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Izohlar -->
+    <div class="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-comments text-blue-600"></i>
+                Foydalanuvchilar fikrlari
+                <span class="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"><%c++ BookDetail_tmp_stream << ratings.size(); %></span>
+            </h3>
+        </div>
+
+        <%c++ if (ratings.empty()) { %>
+        <div class="p-10 text-center text-slate-400">
+            <i class="fas fa-comment-slash text-4xl mb-3 block text-slate-200"></i>
+            <p class="text-sm">Hali izohlar yo'q. Birinchi bo'lib o'z fikringizni qoldiring!</p>
+        </div>
+        <%c++ } else { %>
+        <div class="divide-y divide-slate-100">
+            <%c++ for (auto& r : ratings) {
+                auto rname  = getOr(r, "reader_name", "Anonim");
+                auto rscore = getOr(r, "rating", "0");
+                auto review = getOr(r, "review");
+                auto rdate  = getOr(r, "updated_at");
+                int score = 0;
+                try { score = std::stoi(rscore); } catch (...) { score = 0; }
+            %>
+            <div class="px-6 py-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3 flex-1">
+                        <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-sky-400 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            <%c++ BookDetail_tmp_stream << (rname.empty() ? "?" : rname.substr(0, 1)); %>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <p class="font-semibold text-sm text-slate-800"><%c++ BookDetail_tmp_stream << rname; %></p>
+                                <span class="text-yellow-500 text-xs">
+                                    <%c++ for (int s = 1; s <= 5; s++) {
+                                        BookDetail_tmp_stream << (s <= score ? "★" : "☆");
+                                    } %>
+                                </span>
+                                <%c++ if (!rdate.empty()) { %>
+                                <span class="text-xs text-slate-400"><%c++ BookDetail_tmp_stream << (rdate.size() > 10 ? rdate.substr(0, 10) : rdate); %></span>
+                                <%c++ } %>
+                            </div>
+                            <%c++ if (!review.empty()) { %>
+                            <p class="text-sm text-slate-600 mt-1 leading-relaxed"><%c++ BookDetail_tmp_stream << review; %></p>
+                            <%c++ } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%c++ } %>
+        </div>
+        <%c++ } %>
+    </div>
+</main>
+
+<!-- Baholash modali -->
+<%c++ if (loggedIn) { %>
+<div id="rate-modal" class="fixed inset-0 bg-black/60 z-50 items-center justify-center p-4" style="display:none">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 class="text-lg font-bold text-slate-800 mb-4 text-center">Kitobni baholang</h3>
+        <form method="POST" action="/kitob/<%c++ BookDetail_tmp_stream << bookId; %>/baholash">
+            <input type="hidden" name="csrf_token" value="<%c++ BookDetail_tmp_stream << csrf; %>">
+            <div class="flex justify-center gap-2 mb-4" id="stars">
+                <%c++ for (int s = 1; s <= 5; s++) { %>
+                <label class="star-label" onclick="setStar(<%c++ BookDetail_tmp_stream << s; %>)">
+                    <input type="radio" name="score" value="<%c++ BookDetail_tmp_stream << s; %>" class="hidden">★
+                </label>
+                <%c++ } %>
+            </div>
+            <textarea name="review" placeholder="Fikringiz (ixtiyoriy)..."
+                class="input-field mb-4 resize-none" rows="3"></textarea>
+            <div class="flex gap-3">
+                <button type="button"
+                    onclick="document.getElementById('rate-modal').style.display='none'"
+                    class="flex-1 py-2.5 text-sm font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+                    Bekor
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 text-sm font-bold bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition">
+                    Saqlash
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function setStar(n) {
+    document.querySelectorAll('.star-label').forEach((l,i) => {
+        l.style.color = i < n ? '#f59e0b' : '#d1d5db';
+    });
+}
+document.getElementById('rate-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+<%c++ } %>
+
+<%c++ if (!similar.empty()) { %>
+<section class="max-w-4xl mx-auto px-4 py-8">
+    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+        <i class="fas fa-layer-group text-blue-500"></i> O'xshash kitoblar
+    </h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+    <%c++ for (auto& s : similar) {
+        auto sid    = getOr(s, "id");
+        auto stitle = getOr(s, "title", "Kitob");
+        auto sauth  = getOr(s, "author_name");
+        auto scover = getOr(s, "cover_image");
+        auto srate  = getOr(s, "average_rating");
+    %>
+    <a href="/kitob/<%c++ BookDetail_tmp_stream << sid; %>"
+       class="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition hover:-translate-y-1 block">
+        <div class="h-36 bg-slate-100 flex items-center justify-center">
+            <%c++ if (!scover.empty()) { %>
+            <img src="<%c++ BookDetail_tmp_stream << scover; %>" class="w-full h-full object-cover" alt="">
+            <%c++ } else { %>
+            <i class="fas fa-book text-slate-300 text-3xl"></i>
+            <%c++ } %>
+        </div>
+        <div class="p-2.5">
+            <p class="font-semibold text-xs text-slate-800 line-clamp-2 leading-snug"><%c++ BookDetail_tmp_stream << stitle; %></p>
+            <p class="text-[10px] text-slate-400 mt-0.5 truncate"><%c++ BookDetail_tmp_stream << sauth; %></p>
+            <%c++ if (!srate.empty()) { %>
+            <p class="text-[10px] text-amber-500 mt-1"><i class="fas fa-star"></i> <%c++ BookDetail_tmp_stream << srate; %></p>
+            <%c++ } %>
+        </div>
+    </a>
+    <%c++ } %>
+    </div>
+</section>
+<%c++ } %>
+
+<footer class="bg-slate-800 text-slate-400 text-xs py-5 px-4 text-center">
+    © 2026 TATU Kutubxona
+</footer>
+</body>
+</html>

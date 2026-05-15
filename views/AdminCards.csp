@@ -1,0 +1,159 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Kutubxona Kartalari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background:#f8fafc; } </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& cards     = @@.get<RowList>("cards");
+    auto  pending   = @@.get<int>("pending_count");
+    auto& flashMsg  = @@.get<std::string>("flash_msg");
+    auto& flashType = @@.get<std::string>("flash_type");
+    auto& csrf      = @@.get<std::string>("csrf_token");
+%>
+
+<nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center font-black text-xs">T</div>
+            <span class="font-bold text-sm">TATU Admin</span>
+            <span class="text-slate-500 text-xs">|</span>
+            <span class="text-slate-300 text-xs font-medium">Kartalar</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+            <a href="/admin/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Panel</a>
+            <a href="/admin/readers" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">O'quvchilar</a>
+            <a href="/admin/books" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Kitoblar</a>
+            <a href="/admin/bronlar" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Bronlar</a>
+            <a href="/admin/berishlar" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Berishlar</a>
+            <a href="/admin/kartalar" class="px-3 py-1.5 rounded-lg bg-slate-700 text-white transition">Kartalar<%c++ if (pending > 0) { %> <span class="ml-1 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"><%c++ AdminCards_tmp_stream << pending; %></span><%c++ } %></a>
+            <a href="/admin/analitika" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition"><i class="fas fa-chart-bar mr-1"></i>Analitika</a>
+            <a href="/admin/chiqish" class="ml-2 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-800">Kutubxona kartalari</h1>
+            <p class="text-sm text-slate-500 mt-1">Foydalanuvchilarning kutubxona kartalari ro'yxati</p>
+        </div>
+        <%c++ if (pending > 0) { %>
+        <span class="text-sm font-bold bg-orange-100 text-orange-700 px-4 py-2 rounded-xl">
+            <i class="fas fa-clock mr-1"></i><%c++ AdminCards_tmp_stream << pending; %> ta tasdiqlash kutmoqda
+        </span>
+        <%c++ } %>
+    </div>
+
+    <%c++ if (!flashMsg.empty()) { %>
+    <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
+        <%c++ AdminCards_tmp_stream << flashMsg; %>
+    </div>
+    <%c++ } %>
+
+    <%c++ if (cards.empty()) { %>
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+        <i class="fas fa-id-card text-5xl mb-3 block text-slate-200"></i>
+        <p class="text-sm">Hozircha kutubxona kartalari yo'q.</p>
+    </div>
+    <%c++ } else { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <%c++ for (auto& c : cards) {
+            bool approved = getOr(c, "is_approved") == "True";
+            auto cid      = getOr(c, "id");
+            auto img      = getOr(c, "card_image");
+            auto rname    = getOr(c, "reader_name", "—");
+            auto rcardId  = getOr(c, "reader_card_id");
+            auto rphone   = getOr(c, "reader_phone");
+            auto libName  = getOr(c, "library_name", "—");
+            auto created  = getOr(c, "created_at");
+        %>
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+            <!-- Karta rasmi -->
+            <div class="aspect-video bg-slate-100 flex items-center justify-center cursor-pointer relative"
+                 <%c++ if (!img.empty() && img != "null") { %>onclick="showCard('<%c++ AdminCards_tmp_stream << img; %>')"<%c++ } %>>
+                <%c++ if (!img.empty() && img != "null") { %>
+                <img src="<%c++ AdminCards_tmp_stream << img; %>" class="w-full h-full object-cover" alt="">
+                <div class="absolute inset-0 bg-black/0 hover:bg-black/20 transition flex items-center justify-center">
+                    <i class="fas fa-search-plus text-white text-2xl opacity-0 hover:opacity-100"></i>
+                </div>
+                <%c++ } else { %>
+                <i class="fas fa-id-card text-slate-300 text-5xl"></i>
+                <%c++ } %>
+                <div class="absolute top-2 right-2">
+                    <%c++ if (approved) { %>
+                    <span class="text-[10px] font-bold bg-green-500 text-white px-2 py-1 rounded-full">✅ Tasdiqlangan</span>
+                    <%c++ } else { %>
+                    <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-1 rounded-full">⏳ Kutilmoqda</span>
+                    <%c++ } %>
+                </div>
+            </div>
+            <!-- Foydalanuvchi info -->
+            <div class="p-4">
+                <p class="font-bold text-sm text-slate-800 truncate"><%c++ AdminCards_tmp_stream << rname; %></p>
+                <div class="text-xs text-slate-400 mt-1 space-y-0.5">
+                    <%c++ if (!rcardId.empty()) { %>
+                    <p><i class="fas fa-id-badge mr-1 w-3"></i><%c++ AdminCards_tmp_stream << rcardId; %></p>
+                    <%c++ } %>
+                    <%c++ if (!rphone.empty()) { %>
+                    <p><i class="fas fa-phone mr-1 w-3"></i><%c++ AdminCards_tmp_stream << rphone; %></p>
+                    <%c++ } %>
+                    <p><i class="fas fa-building mr-1 w-3"></i><%c++ AdminCards_tmp_stream << libName; %></p>
+                </div>
+                <!-- Amallar -->
+                <div class="mt-3 pt-3 border-t border-slate-100 flex gap-2">
+                    <%c++ if (!approved) { %>
+                    <form method="POST" action="/admin/kartalar/<%c++ AdminCards_tmp_stream << cid; %>/holat" class="flex-1">
+                        <input type="hidden" name="csrf_token" value="<%c++ AdminCards_tmp_stream << csrf; %>">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="w-full text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition">
+                            <i class="fas fa-check mr-1"></i>Tasdiqlash
+                        </button>
+                    </form>
+                    <%c++ } else { %>
+                    <form method="POST" action="/admin/kartalar/<%c++ AdminCards_tmp_stream << cid; %>/holat" class="flex-1"
+                          onsubmit="return confirm('Karta tasdiqini olib tashlaysizmi?')">
+                        <input type="hidden" name="csrf_token" value="<%c++ AdminCards_tmp_stream << csrf; %>">
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="w-full text-xs font-bold border border-orange-200 text-orange-600 px-3 py-1.5 rounded-lg hover:bg-orange-50 transition">
+                            <i class="fas fa-undo mr-1"></i>Bekor
+                        </button>
+                    </form>
+                    <%c++ } %>
+                </div>
+            </div>
+        </div>
+        <%c++ } %>
+    </div>
+    <%c++ } %>
+</div>
+
+<!-- Modal -->
+<div id="cardModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 cursor-pointer" onclick="closeCard()">
+    <img id="cardImage" class="max-w-full max-h-full rounded-xl shadow-2xl">
+</div>
+
+<script>
+function showCard(url) {
+    document.getElementById('cardImage').src = url;
+    document.getElementById('cardModal').classList.remove('hidden');
+}
+function closeCard() {
+    document.getElementById('cardModal').classList.add('hidden');
+}
+</script>
+</body>
+</html>

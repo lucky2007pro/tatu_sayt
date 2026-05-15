@@ -1,0 +1,327 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATU Kutubxona</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(37,99,235,.15); }
+        .book-card { transition: all .2s; }
+        .category-pill { transition: all .15s; }
+        .category-pill:hover, .category-pill.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& books     = @@.get<RowList>("books");
+    auto& popular   = @@.get<RowList>("popular");
+    auto& libraries = @@.get<RowList>("libraries");
+    auto& sections  = @@.get<RowList>("sections");
+    auto& search    = @@.get<std::string>("search");
+    auto& selLib    = @@.get<std::string>("sel_library");
+    auto& selSec    = @@.get<std::string>("sel_section");
+    auto& selStat   = @@.get<std::string>("sel_status");
+    auto& selSort   = @@.get<std::string>("sel_sort");
+    auto& selAuthor = @@.get<std::string>("sel_author");
+    auto& selIsbn   = @@.get<std::string>("sel_isbn");
+    auto& totalStr  = @@.get<std::string>("total_count");
+    auto& hasNext   = @@.get<std::string>("has_next");
+    auto& hasPrev   = @@.get<std::string>("has_prev");
+    auto& pageStr   = @@.get<std::string>("page");
+    auto  loggedIn  = @@.get<bool>("is_logged_in");
+    auto  approved  = @@.get<bool>("reader_approved");
+    auto& name      = @@.get<std::string>("reader_name");
+    auto& csrf      = @@.get<std::string>("csrf_token");
+    int page = pageStr.empty() ? 1 : std::stoi(pageStr);
+%>
+
+<!-- NAVBAR -->
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <a href="/" class="flex items-center gap-2 flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">T</div>
+            <span class="font-bold text-slate-800 text-lg">TATU Kutubxona</span>
+        </a>
+        <form action="/" method="GET" class="flex-grow max-w-lg hidden md:flex" id="search-form">
+            <div class="flex w-full rounded-lg border border-slate-200 overflow-hidden focus-within:border-blue-500 relative">
+                <input type="text" name="q" id="search-input" value="<%c++ Index_tmp_stream << search; %>"
+                       placeholder="Kitob nomi yoki muallif..."
+                       autocomplete="off"
+                       class="flex-1 px-4 py-2 text-sm outline-none bg-slate-50"
+                       onfocus="showHistory()" oninput="showHistory()" onblur="setTimeout(hideHistory,150)">
+                <button type="submit" class="px-4 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div id="search-history" class="hidden absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-lg shadow-lg z-50 max-h-48 overflow-y-auto"></div>
+            </div>
+        </form>
+        <div class="flex items-center gap-2">
+            <a href="/statistika" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Statistika</a>
+            <a href="/kutubxonalar" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50"><i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar</a>
+            <a href="/haqida" class="hidden lg:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Haqida</a>
+            <a href="/sevimlilar" class="hidden md:flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition" id="nav-fav">
+                <i class="fas fa-heart"></i><span id="fav-count" class="hidden ml-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5"></span>
+            </a>
+            <%c++ if (loggedIn) { %>
+                <a href="/kabinet" class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 border border-slate-200 px-3 py-2 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">
+                    <i class="fas fa-user"></i>
+                    <%c++ Index_tmp_stream << name; %>
+                    <%c++ if (approved) { %><span class="w-2 h-2 bg-green-500 rounded-full"></span><%c++ } else { %><span class="w-2 h-2 bg-orange-400 rounded-full"></span><%c++ } %>
+                </a>
+                <a href="/chiqish" class="text-xs font-semibold text-red-500 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50 transition">Chiqish</a>
+            <%c++ } else { %>
+                <a href="/kirish" class="text-xs font-semibold text-slate-600 border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">Kirish</a>
+                <a href="/royxat" class="text-xs font-semibold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Ro'yxat</a>
+            <%c++ } %>
+            <a href="/admin" class="text-xs font-semibold bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-700 transition hidden md:block"><i class="fas fa-shield-alt"></i></a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="bg-gradient-to-r from-blue-600 to-sky-500 text-white py-16 px-4">
+    <div class="max-w-2xl mx-auto text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-3">TATU Online Kutubxona</h1>
+        <p class="text-blue-100 text-lg mb-8">Kitoblarni qidiring, band qiling va o'qing</p>
+        <form action="/" method="GET" class="flex gap-2 max-w-lg mx-auto">
+            <input type="text" name="q" value="<%c++ Index_tmp_stream << search; %>"
+                   placeholder="Kitob yoki muallif nomi..."
+                   class="flex-1 px-5 py-3 rounded-xl text-slate-800 text-sm outline-none border-2 border-white/30 bg-white/20 placeholder-white/70 focus:bg-white/30 focus:border-white">
+            <button type="submit" class="bg-white text-blue-600 font-bold px-6 py-3 rounded-xl text-sm hover:bg-blue-50 transition">
+                <i class="fas fa-search"></i> Qidirish
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Popular (faqat qidiruvsiz holda) -->
+<%c++ if (search.empty() && !popular.empty()) { %>
+<section class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-fire text-orange-500"></i> Eng ommabop kitoblar
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <%c++ int rank = 1; for (auto& b : popular) { %>
+        <a href="/kitob/<%c++ Index_tmp_stream << getOr(b, "id"); %>"
+           class="flex items-center gap-3 bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-400 hover:shadow-md transition">
+            <span class="text-2xl font-black text-blue-600 w-8 text-center"><%c++ Index_tmp_stream << rank++; %></span>
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm text-slate-800 truncate"><%c++ Index_tmp_stream << getOr(b, "title", "Kitob"); %></p>
+                <p class="text-xs text-slate-400 truncate"><%c++ Index_tmp_stream << getOr(b, "author_name"); %></p>
+            </div>
+            <%c++ auto pr = getOr(b, "average_rating"); if (!pr.empty() && pr != "0" && pr != "0.0") { %>
+            <span class="text-xs bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">★ <%c++ Index_tmp_stream << pr; %></span>
+            <%c++ } %>
+        </a>
+        <%c++ } %>
+    </div>
+</section>
+<%c++ } %>
+
+<!-- Filtrlar -->
+<div class="bg-white border-y border-slate-200 py-3 px-4">
+    <form action="/" method="GET" class="max-w-7xl mx-auto flex flex-wrap gap-2 items-center">
+        <%c++ if (!search.empty()) { %><input type="hidden" name="q" value="<%c++ Index_tmp_stream << search; %>"><%c++ } %>
+        <input type="text" name="author" value="<%c++ Index_tmp_stream << selAuthor; %>"
+               placeholder="Muallif..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none w-36">
+        <input type="text" name="isbn" value="<%c++ Index_tmp_stream << selIsbn; %>"
+               placeholder="ISBN..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none w-32">
+        <select name="library" class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none">
+            <option value="">Barcha kutubxonalar</option>
+            <%c++ for (auto& lib : libraries) { auto lid = getOr(lib, "id"); %>
+            <option value="<%c++ Index_tmp_stream << lid; %>"
+                <%c++ if (selLib == lid) { %>selected<%c++ } %>>
+                <%c++ Index_tmp_stream << getOr(lib, "name"); %>
+            </option>
+            <%c++ } %>
+        </select>
+        <select name="section" class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none">
+            <option value="">Barcha bo'limlar</option>
+            <%c++ for (auto& sec : sections) { auto sid = getOr(sec, "id"); %>
+            <option value="<%c++ Index_tmp_stream << sid; %>"
+                <%c++ if (selSec == sid) { %>selected<%c++ } %>>
+                <%c++ Index_tmp_stream << getOr(sec, "name"); %>
+            </option>
+            <%c++ } %>
+        </select>
+        <select name="status" class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none">
+            <option value="">Barcha holatlar</option>
+            <option value="available" <%c++ if (selStat == "available") { %>selected<%c++ } %>>✅ Mavjud</option>
+            <option value="busy"      <%c++ if (selStat == "busy")      { %>selected<%c++ } %>>🔒 Band</option>
+        </select>
+        <select name="sort" class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:border-blue-500 outline-none">
+            <option value="">Tartiblash</option>
+            <option value="title"             <%c++ if (selSort == "title")            { %>selected<%c++ } %>>Nomi A-Z</option>
+            <option value="-title"            <%c++ if (selSort == "-title")           { %>selected<%c++ } %>>Nomi Z-A</option>
+            <option value="-view_count"       <%c++ if (selSort == "-view_count")      { %>selected<%c++ } %>>Ko'rishlar ↓</option>
+            <option value="-reservation_count"<%c++ if (selSort == "-reservation_count"){ %>selected<%c++ } %>>Bronlar ↓</option>
+            <option value="-issue_count"      <%c++ if (selSort == "-issue_count")     { %>selected<%c++ } %>>O'qishlar ↓</option>
+            <option value="-published_date"   <%c++ if (selSort == "-published_date")  { %>selected<%c++ } %>>Yangi kitoblar</option>
+        </select>
+        <button type="submit" class="text-xs bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-filter"></i> Filtrla
+        </button>
+        <a href="/" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-2">Tozalash</a>
+    </form>
+</div>
+
+<!-- Kitoblar -->
+<main class="max-w-7xl mx-auto px-4 py-8 flex-1">
+    <div class="flex items-center justify-between mb-5">
+        <h2 class="font-bold text-slate-800">
+            <%c++ if (!search.empty()) { %>
+                "<%c++ Index_tmp_stream << search; %>" natijalar
+            <%c++ } else { %>Barcha kitoblar<%c++ } %>
+        </h2>
+        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full"><%c++ Index_tmp_stream << totalStr; %> ta</span>
+    </div>
+
+    <%c++ if (!books.empty()) { %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <%c++ for (auto& b : books) {
+            auto bid    = getOr(b, "id");
+            auto bname  = getOr(b, "title", "Kitob");
+            auto bauth  = getOr(b, "author_name");
+            auto bcover = getOr(b, "cover_image");
+            auto brate  = getOr(b, "average_rating");
+            bool avail  = (getOr(b, "is_available", "True") == "True");
+        %>
+        <div class="book-card bg-white rounded-xl overflow-hidden border border-slate-200 relative group">
+        <button onclick="toggleFav(event,'<%c++ Index_tmp_stream << bid; %>','<%c++ Index_tmp_stream << bname; %>','<%c++ Index_tmp_stream << bauth; %>','<%c++ Index_tmp_stream << bcover; %>',<%c++ Index_tmp_stream << (avail?"true":"false"); %>)"
+                id="fav-<%c++ Index_tmp_stream << bid; %>"
+                class="absolute top-2 right-2 z-10 w-8 h-8 bg-white/90 rounded-full shadow text-slate-300 text-sm hidden group-hover:flex items-center justify-center hover:text-red-500 transition">
+            <i class="fas fa-heart"></i>
+        </button>
+        <a href="/kitob/<%c++ Index_tmp_stream << bid; %>">
+            <div class="relative h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                <%c++ if (!bcover.empty()) { %>
+                <img src="<%c++ Index_tmp_stream << bcover; %>" class="w-full h-full object-cover" alt="">
+                <%c++ } else { %>
+                <i class="fas fa-book text-slate-300 text-4xl"></i>
+                <%c++ } %>
+                <span class="absolute bottom-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full
+                    <%c++ if (avail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                    <%c++ if (avail) { %>✅ Mavjud<%c++ } else { %>🔒 Band<%c++ } %>
+                </span>
+            </div>
+            <div class="p-3">
+                <p class="font-semibold text-xs text-slate-800 line-clamp-2 leading-snug"><%c++ Index_tmp_stream << bname; %></p>
+                <p class="text-[11px] text-slate-400 mt-0.5 truncate"><%c++ Index_tmp_stream << bauth; %></p>
+                <%c++ if (!brate.empty() && brate != "0" && brate != "0.0") { %>
+                <span class="inline-block mt-1 text-[10px] bg-yellow-50 text-yellow-600 font-bold px-1.5 py-0.5 rounded-full">★ <%c++ Index_tmp_stream << brate; %></span>
+                <%c++ } %>
+            </div>
+        </a>
+        </div>
+        <%c++ } %>
+    </div>
+
+    <!-- Pagination -->
+    <%c++ if (!hasPrev.empty() || !hasNext.empty()) { %>
+    <div class="flex items-center justify-center gap-3 mt-8">
+        <%c++ if (!hasPrev.empty()) { %>
+        <a href="/?q=<%c++ Index_tmp_stream << search; %>&library=<%c++ Index_tmp_stream << selLib; %>&section=<%c++ Index_tmp_stream << selSec; %>&status=<%c++ Index_tmp_stream << selStat; %>&sort=<%c++ Index_tmp_stream << selSort; %>&page=<%c++ Index_tmp_stream << (page-1); %>"
+           class="text-sm font-semibold border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">← Oldingi</a>
+        <%c++ } %>
+        <span class="text-sm text-slate-400"><%c++ Index_tmp_stream << page; %>-sahifa</span>
+        <%c++ if (!hasNext.empty()) { %>
+        <a href="/?q=<%c++ Index_tmp_stream << search; %>&library=<%c++ Index_tmp_stream << selLib; %>&section=<%c++ Index_tmp_stream << selSec; %>&status=<%c++ Index_tmp_stream << selStat; %>&sort=<%c++ Index_tmp_stream << selSort; %>&page=<%c++ Index_tmp_stream << (page+1); %>"
+           class="text-sm font-semibold border border-slate-200 px-5 py-2 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">Keyingi →</a>
+        <%c++ } %>
+    </div>
+    <%c++ } %>
+
+    <%c++ } else { %>
+    <div class="text-center py-20 text-slate-400">
+        <i class="fas fa-search text-5xl mb-4 block"></i>
+        <p class="text-lg">Kitoblar topilmadi. Filtrni o'zgartirib ko'ring.</p>
+    </div>
+    <%c++ } %>
+</main>
+
+<script>
+// ── Sevimlilar ────────────────────────────────────────────────────────────────
+const LS_KEY = 'tatu_favourites';
+function getFavs() { try { return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch { return []; } }
+function toggleFav(e, id, title, author, cover, avail) {
+    e.preventDefault(); e.stopPropagation();
+    let favs = getFavs();
+    const idx = favs.findIndex(f => String(f.id) === String(id));
+    if (idx >= 0) { favs.splice(idx, 1); }
+    else { favs.unshift({id, title, author, cover, avail}); }
+    localStorage.setItem(LS_KEY, JSON.stringify(favs));
+    updateHearts();
+}
+function updateHearts() {
+    const favs = getFavs();
+    const ids  = new Set(favs.map(f => String(f.id)));
+    document.querySelectorAll('[id^="fav-"]').forEach(btn => {
+        const bid = btn.id.replace('fav-','');
+        btn.style.color = ids.has(bid) ? '#ef4444' : '';
+        btn.classList.add('flex');
+        btn.classList.remove('hidden');
+    });
+    const cnt = document.getElementById('fav-count');
+    if (cnt) {
+        if (favs.length > 0) { cnt.textContent = favs.length; cnt.classList.remove('hidden'); }
+        else cnt.classList.add('hidden');
+    }
+}
+
+// ── Qidiruv tarixi ─────────────────────────────────────────────────────────
+const SH_KEY = 'tatu_search_history';
+function getHistory() { try { return JSON.parse(localStorage.getItem(SH_KEY)||'[]'); } catch { return []; } }
+function addHistory(q) {
+    if (!q.trim()) return;
+    let h = getHistory().filter(x => x !== q.trim());
+    h.unshift(q.trim());
+    if (h.length > 8) h = h.slice(0, 8);
+    localStorage.setItem(SH_KEY, JSON.stringify(h));
+}
+function showHistory() {
+    const inp = document.getElementById('search-input');
+    const box = document.getElementById('search-history');
+    if (!inp || !box) return;
+    const q = inp.value.trim();
+    let h = getHistory();
+    if (q) h = h.filter(x => x.toLowerCase().includes(q.toLowerCase()));
+    if (h.length === 0) { box.classList.add('hidden'); return; }
+    box.innerHTML = h.map(x =>
+        `<div class="px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 cursor-pointer flex items-center gap-2"
+              onclick="document.getElementById('search-input').value='${x.replace(/'/g,"\\'")}';document.getElementById('search-form').submit()">
+            <i class="fas fa-history text-slate-400 text-xs"></i>${x}
+        </div>`
+    ).join('') +
+    `<div class="px-4 py-2 text-xs text-slate-400 hover:bg-red-50 cursor-pointer border-t border-slate-100"
+          onclick="localStorage.removeItem('${SH_KEY}');document.getElementById('search-history').classList.add('hidden')">
+        <i class="fas fa-trash-alt mr-1"></i>Tarixni tozalash
+    </div>`;
+    box.classList.remove('hidden');
+}
+function hideHistory() {
+    const box = document.getElementById('search-history');
+    if (box) box.classList.add('hidden');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    updateHearts();
+    const form = document.getElementById('search-form');
+    if (form) form.addEventListener('submit', () => {
+        const q = document.getElementById('search-input')?.value;
+        if (q) addHistory(q);
+    });
+});
+</script>
+<footer class="bg-slate-800 text-slate-400 text-xs py-6 px-4 text-center">
+    <p><i class="fas fa-book-open text-blue-400 mr-1"></i> TATU Kutubxona &copy; 2026 &mdash; Online band qilish tizimi</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Build output
+out/
+build/
+*.exe
+*.obj
+*.ilk
+*.pdb
+*.lib
+*.exp
+
+# Visual Studio
+.vs/
+CMakeSettings.json
+
+# Generated CSP files
+*.cc.tmp
+
+# Logs
+*.log

@@ -1,0 +1,156 @@
+<%inc
+#include "ViewHelper.h"
+%>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TATU Admin | O'quvchilar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background: #f1f5f9; } </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+<%c++
+    using Row = std::map<std::string, std::string>;
+    using RowList = std::vector<Row>;
+    auto& readers   = @@.get<RowList>("readers");
+    auto& flashMsg  = @@.get<std::string>("flash_msg");
+    auto& flashType = @@.get<std::string>("flash_type");
+    auto& csrf      = @@.get<std::string>("csrf_token");
+    int pendingCount = 0;
+    for (auto& r : readers) {
+        if (getOr(r, "is_active") == "False") pendingCount++;
+    }
+%>
+
+<nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center font-black text-xs">T</div>
+            <span class="font-bold text-sm">TATU Admin</span>
+            <span class="text-slate-500 text-xs">|</span>
+            <span class="text-slate-300 text-xs font-medium">O'quvchilar</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+            <a href="/admin/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Panel</a>
+            <a href="/admin/readers" class="px-3 py-1.5 rounded-lg bg-slate-700 text-white transition">O'quvchilar</a>
+            <a href="/admin/books" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Kitoblar</a>
+            <a href="/admin/bronlar" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Bronlar</a>
+            <a href="/admin/berishlar" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Berishlar</a>
+            <a href="/admin/kartalar" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition">Kartalar</a>
+            <a href="/admin/analitika" class="px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition"><i class="fas fa-chart-bar mr-1"></i>Analitika</a>
+            <a href="/admin/chiqish" class="ml-2 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-extrabold text-slate-800 mb-6">O'quvchilar boshqaruvi</h1>
+
+    <%c++ if (!flashMsg.empty()) { %>
+    <div class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium mb-5
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
+        <%c++ if (flashType == "success") { %>✅<%c++ } else { %>⚠️<%c++ } %>
+        <%c++ AdminReaders_tmp_stream << flashMsg; %>
+    </div>
+    <%c++ } %>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ism</th>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Karta ID</th>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Telefon</th>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Holat</th>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ro'yxatdan o'tgan</th>
+                        <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase">Amallar</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <%c++ for (auto& r : readers) {
+                        bool isActive = getOr(r, "is_active") == "True";
+                        auto rid = getOr(r, "id");
+                    %>
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-2.5">
+                                <%c++ auto fname = getOr(r, "fullname", "—"); %>
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+                                    <%c++ if (isActive) { %>bg-green-100 text-green-700<%c++ } else { %>bg-orange-100 text-orange-700<%c++ } %>">
+                                    <%c++ AdminReaders_tmp_stream << (fname.empty() ? std::string("?") : fname.substr(0,1)); %>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-800"><%c++ AdminReaders_tmp_stream << fname; %></span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-sm text-slate-600 font-mono"><%c++ AdminReaders_tmp_stream << getOr(r, "card_id", "—"); %></td>
+                        <td class="px-5 py-3 text-sm text-slate-500"><%c++ AdminReaders_tmp_stream << getOr(r, "phone", "—"); %></td>
+                        <td class="px-5 py-3">
+                            <%c++ if (isActive) { %>
+                            <span class="text-xs font-bold bg-green-100 text-green-700 px-2.5 py-1 rounded-full">✅ Faol</span>
+                            <%c++ } else { %>
+                            <span class="text-xs font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full">⏸️ Bloklangan</span>
+                            <%c++ } %>
+                        </td>
+                        <td class="px-5 py-3 text-xs text-slate-500">
+                            <%c++ auto cdate = getOr(r, "created_at"); %>
+                            <%c++ AdminReaders_tmp_stream << (cdate.size() > 10 ? cdate.substr(0, 10) : cdate); %>
+                        </td>
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                <%c++ if (!isActive) { %>
+                                <form method="POST" action="/admin/readers/<%c++ AdminReaders_tmp_stream << rid; %>/holat">
+                                    <input type="hidden" name="csrf_token" value="<%c++ AdminReaders_tmp_stream << csrf; %>">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit"
+                                        class="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition">
+                                        <i class="fas fa-check mr-1"></i>Faollashtir
+                                    </button>
+                                </form>
+                                <%c++ } else { %>
+                                <form method="POST" action="/admin/readers/<%c++ AdminReaders_tmp_stream << rid; %>/holat"
+                                      onsubmit="return confirm('Foydalanuvchini bloklashga ishonchingiz komilmi?')">
+                                    <input type="hidden" name="csrf_token" value="<%c++ AdminReaders_tmp_stream << csrf; %>">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit"
+                                        class="text-xs font-bold border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition">
+                                        <i class="fas fa-pause mr-1"></i>Blok
+                                    </button>
+                                </form>
+                                <%c++ } %>
+                            </div>
+                        </td>
+                    </tr>
+                    <%c++ } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Karta rasmi modali -->
+<div id="card-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center p-4" style="display:none">
+    <div class="bg-white rounded-2xl p-4 max-w-sm w-full shadow-2xl text-center">
+        <img id="card-img" src="" class="w-full rounded-xl mb-4 max-h-64 object-contain" alt="Karta">
+        <button onclick="document.getElementById('card-modal').style.display='none'"
+            class="w-full py-2 text-sm font-semibold border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+            Yopish
+        </button>
+    </div>
+</div>
+
+<script>
+function showCard(url) {
+    document.getElementById('card-img').src = url;
+    document.getElementById('card-modal').style.display = 'flex';
+}
+document.getElementById('card-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+</body>
+</html>
