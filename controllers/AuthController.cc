@@ -8,9 +8,12 @@ void AuthController::loginForm(const HttpRequestPtr& req,
                                std::function<void(const HttpResponsePtr&)>&& cb)
 {
     if (isLoggedIn(req)) { cb(redirect("/kabinet")); return; }
+    std::string nextUrl = req->getParameter("next");
+    if (nextUrl.empty() || nextUrl[0] != '/') nextUrl = "";
     HttpViewData data;
     data.insert("csrf_token", ensureCsrf(req));
-    data.insert("error_msg", std::string(""));
+    data.insert("error_msg",  std::string(""));
+    data.insert("next_url",   nextUrl);
     cb(HttpResponse::newHttpViewResponse("Login", data));
 }
 
@@ -51,7 +54,9 @@ void AuthController::handleLogin(const HttpRequestPtr& req,
                 s->insert("reader_approved", isActive);
                 if (data.isMember("id") && data["id"].isInt())
                     s->insert("reader_id", std::to_string(data["id"].asInt()));
-                cb(redirect("/kabinet"));
+                std::string nextUrl = req->getParameter("next");
+                if (nextUrl.empty() || nextUrl[0] != '/') nextUrl = "/kabinet";
+                cb(redirect(nextUrl));
             } else {
                 std::string err = "Noto'g'ri telefon raqam yoki parol.";
                 if (data.isObject()) {

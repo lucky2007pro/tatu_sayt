@@ -209,8 +209,10 @@ void HomeController::libraryDetail(const HttpRequestPtr& req,
 void HomeController::favourites(const HttpRequestPtr& req,
                                 std::function<void(const HttpResponsePtr&)>&& cb)
 {
-    bool loggedIn = isLoggedIn(req);
-    std::string name = sessionStr(req, "reader_name", "Mehmon");
+    if (!isLoggedIn(req)) { cb(redirect("/kirish?next=/sevimlilar")); return; }
+
+    bool loggedIn = true;
+    std::string name = sessionStr(req, "reader_name", "");
     bool approved    = sessionBool(req, "reader_approved");
 
     HttpViewData data;
