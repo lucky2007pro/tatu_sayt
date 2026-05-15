@@ -82,10 +82,25 @@
                     <tr class="hover:bg-slate-50 transition">
                         <td class="px-5 py-3 text-xs text-slate-400 font-mono"><%c++ AdminBooks_tmp_stream << i++; %></td>
                         <td class="px-5 py-3">
-                            <a href="/kitob/<%c++ AdminBooks_tmp_stream << bid; %>"
-                               class="font-semibold text-sm text-slate-800 hover:text-blue-600 transition">
-                                <%c++ AdminBooks_tmp_stream << getOr(b, "title", "—"); %>
-                            </a>
+                            <div class="flex items-center gap-3">
+                                <%c++ auto cover = getOr(b, "cover_image"); if (!cover.empty()) { %>
+                                <img src="<%c++ AdminBooks_tmp_stream << cover; %>" alt=""
+                                     class="w-8 h-10 rounded object-cover flex-shrink-0 border border-slate-200">
+                                <%c++ } else { %>
+                                <div class="w-8 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-book text-slate-300 text-xs"></i>
+                                </div>
+                                <%c++ } %>
+                                <div>
+                                    <a href="/kitob/<%c++ AdminBooks_tmp_stream << bid; %>"
+                                       class="font-semibold text-sm text-slate-800 hover:text-blue-600 transition">
+                                        <%c++ AdminBooks_tmp_stream << getOr(b, "title", "—"); %>
+                                    </a>
+                                    <%c++ auto ebk = getOr(b, "ebook_file"); if (!ebk.empty()) { %>
+                                    <span class="ml-1 text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-bold">PDF</span>
+                                    <%c++ } %>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-5 py-3 text-sm text-slate-500"><%c++ AdminBooks_tmp_stream << getOr(b, "author_name", "—"); %></td>
                         <td class="px-5 py-3 text-sm text-slate-500"><%c++ AdminBooks_tmp_stream << getOr(b, "library_name", "—"); %></td>

@@ -122,7 +122,8 @@ void AdminController::books(const HttpRequestPtr& req,
 
     apiGet("/api/books/", [=, cb = std::move(cb)](bool, const Json::Value& bj) mutable {
         RowList books = jsonArrayToRows(bj,
-            {"id","title","author_name","library_name","section_name","is_available"});
+            {"id","title","author_name","library_name","section_name","is_available",
+             "cover_image","ebook_file"});
         HttpViewData data;
         data.insert("books",      books);
         data.insert("flash_msg",  flashMsg);
@@ -181,21 +182,37 @@ void AdminController::addBook(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
     if (!isAdmin(req)) { cb(redirect("/admin")); return; }
 
-    Json::Value body;
-    body["title"]          = req->getParameter("title");
-    body["author_name"]    = req->getParameter("author_name");
-    body["isbn"]           = req->getParameter("isbn");
-    body["published_date"] = req->getParameter("published_date");
-    body["description"]    = req->getParameter("description");
-    body["shelf"]          = req->getParameter("shelf");
-    body["row"]            = req->getParameter("row");
-    std::string libId  = req->getParameter("library");
-    std::string secId  = req->getParameter("section");
-    if (!libId.empty())  body["library"]  = std::stoi(libId);
-    if (!secId.empty())  body["section"]  = std::stoi(secId);
+    std::map<std::string, std::string> fields;
+    fields["title"]          = req->getParameter("title");
+    fields["author_name"]    = req->getParameter("author_name");
+    fields["isbn"]           = req->getParameter("isbn");
+    fields["published_date"] = req->getParameter("published_date");
+    fields["description"]    = req->getParameter("description");
+    fields["shelf"]          = req->getParameter("shelf");
+    fields["row"]            = req->getParameter("row");
+    fields["language"]       = req->getParameter("language");
+    fields["total_pages"]    = req->getParameter("total_pages");
+    std::string libId = req->getParameter("library");
+    std::string secId = req->getParameter("section");
+    if (!libId.empty()) fields["library"] = libId;
+    if (!secId.empty()) fields["section"] = secId;
 
-    apiPost("/api/books/", body,
-        [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {
+    std::map<std::string, FileData> files;
+    for (const auto& f : req->getUploadedFiles()) {
+        auto sv = f.fileContent();
+        if (sv.empty()) continue;
+        std::string content(sv.data(), sv.size());
+        std::string ct   = f.getContentType();
+        std::string fn   = f.getFileName();
+        std::string item = f.itemName();
+        if (item == "cover_image" && ct.find("image") != std::string::npos)
+            files["cover_image"] = {fn, ct, content};
+        else if (item == "ebook_file")
+            files["ebook_file"] = {fn, "application/pdf", content};
+    }
+
+    apiPostMultipart("/api/books/", fields, files,
+        [req, cb = std::move(cb)](int status, const Json::Value&) mutable {
             bool ok = status < 400;
             req->session()->insert("flash_msg",
                 ok ? std::string("Kitob muvaffaqiyatli qo'shildi.")
@@ -203,7 +220,7 @@ void AdminController::addBook(const HttpRequestPtr& req,
             req->session()->insert("flash_type",
                 ok ? std::string("success") : std::string("error"));
             cb(redirect("/admin/books"));
-        }, "", true);
+        }, true);
 }
 
 // ── Kitob tahrirlash ─────────────────────────────────────────────────────────
@@ -219,7 +236,8 @@ void AdminController::editBookForm(const HttpRequestPtr& req,
         if (!ok) { cb(redirect("/admin/books")); return; }
         Row book = jsonObjectToRow(bookJson,
             {"id","title","author_name","isbn","published_date","description",
-             "library","section","shelf","row","cover_image"});
+             "library","section","shelf","row","cover_image","ebook_file",
+             "language","total_pages"});
 
         apiGet("/api/libraries/",
             [req, book, cb = std::move(cb)](bool, const Json::Value& lj) mutable
@@ -248,20 +266,36 @@ void AdminController::editBook(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
     if (!isAdmin(req)) { cb(redirect("/admin")); return; }
 
-    Json::Value body;
-    body["title"]          = req->getParameter("title");
-    body["author_name"]    = req->getParameter("author_name");
-    body["isbn"]           = req->getParameter("isbn");
-    body["published_date"] = req->getParameter("published_date");
-    body["description"]    = req->getParameter("description");
-    body["shelf"]          = req->getParameter("shelf");
-    body["row"]            = req->getParameter("row");
-    std::string libId  = req->getParameter("library");
-    std::string secId  = req->getParameter("section");
-    if (!libId.empty())  body["library"]  = std::stoi(libId);
-    if (!secId.empty())  body["section"]  = std::stoi(secId);
+    std::map<std::string, std::string> fields;
+    fields["title"]          = req->getParameter("title");
+    fields["author_name"]    = req->getParameter("author_name");
+    fields["isbn"]           = req->getParameter("isbn");
+    fields["published_date"] = req->getParameter("published_date");
+    fields["description"]    = req->getParameter("description");
+    fields["shelf"]          = req->getParameter("shelf");
+    fields["row"]            = req->getParameter("row");
+    fields["language"]       = req->getParameter("language");
+    fields["total_pages"]    = req->getParameter("total_pages");
+    std::string libId = req->getParameter("library");
+    std::string secId = req->getParameter("section");
+    if (!libId.empty()) fields["library"] = libId;
+    if (!secId.empty()) fields["section"] = secId;
 
-    apiPatch("/api/books/" + std::to_string(id) + "/", body,
+    std::map<std::string, FileData> files;
+    for (const auto& f : req->getUploadedFiles()) {
+        auto sv = f.fileContent();
+        if (sv.empty()) continue;
+        std::string content(sv.data(), sv.size());
+        std::string ct   = f.getContentType();
+        std::string fn   = f.getFileName();
+        std::string item = f.itemName();
+        if (item == "cover_image" && ct.find("image") != std::string::npos)
+            files["cover_image"] = {fn, ct, content};
+        else if (item == "ebook_file")
+            files["ebook_file"] = {fn, "application/pdf", content};
+    }
+
+    apiPatchMultipart("/api/books/" + std::to_string(id) + "/", fields, files,
         [req, id, cb = std::move(cb)](int status, const Json::Value&) mutable {
             bool ok = status < 400;
             req->session()->insert("flash_msg",
@@ -270,7 +304,7 @@ void AdminController::editBook(const HttpRequestPtr& req,
             req->session()->insert("flash_type",
                 ok ? std::string("success") : std::string("error"));
             cb(redirect("/admin/books"));
-        }, "", true);
+        }, true);
 }
 
 // ── Kutubxona kartalari ──────────────────────────────────────────────────────

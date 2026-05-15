@@ -61,7 +61,7 @@
 
     <main class="flex-1 p-6">
         <div class="max-w-2xl mx-auto">
-            <form method="POST" action="<%c++ AdminBookForm_tmp_stream << formAction; %>" class="space-y-5">
+            <form method="POST" action="<%c++ AdminBookForm_tmp_stream << formAction; %>" class="space-y-5" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<%c++ AdminBookForm_tmp_stream << csrf; %>">
 
                 <!-- Asosiy ma'lumotlar -->
@@ -159,6 +159,79 @@
                     </div>
                 </div>
 
+                <!-- Muqova rasmi -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                    <h2 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                        <i class="fas fa-image text-yellow-400"></i> Muqova rasmi
+                    </h2>
+                    <div class="flex items-start gap-5">
+                        <div class="w-28 h-36 rounded-xl bg-slate-900 border border-slate-600 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <%c++ auto existCover = getOr(book, "cover_image"); %>
+                            <img id="coverPreview" src="<%c++ AdminBookForm_tmp_stream << existCover; %>" alt=""
+                                 class="w-full h-full object-cover <%c++ if (existCover.empty()) AdminBookForm_tmp_stream << "hidden"; %>">
+                            <i id="coverIcon" class="fas fa-book-open text-slate-600 text-2xl <%c++ if (!existCover.empty()) AdminBookForm_tmp_stream << "hidden"; %>"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Rasm fayli (JPG, PNG, WEBP)</label>
+                            <input type="file" name="cover_image" id="coverInput" accept="image/*"
+                                   class="w-full text-xs text-slate-300 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 cursor-pointer
+                                          file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold
+                                          file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                            <%c++ if (!existCover.empty()) { %>
+                            <p class="text-[10px] text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i>Mavjud rasm saqlanadi. Yangi fayl tanlasangiz, o'zgaradi.</p>
+                            <%c++ } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Elektron kitob -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                    <h2 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tablet-alt text-purple-400"></i> Elektron kitob (PDF)
+                    </h2>
+                    <%c++ auto existEbook = getOr(book, "ebook_file"); if (!existEbook.empty()) { %>
+                    <div class="flex items-center gap-3 mb-3 p-3 bg-purple-900/20 border border-purple-700/50 rounded-xl">
+                        <i class="fas fa-file-pdf text-purple-400 text-xl"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-purple-300">Mavjud elektron kitob bor</p>
+                            <a href="<%c++ AdminBookForm_tmp_stream << existEbook; %>" target="_blank"
+                               class="text-[10px] text-purple-400 hover:underline">Ko'rish / yuklab olish</a>
+                        </div>
+                    </div>
+                    <%c++ } %>
+                    <label class="block text-xs font-semibold text-slate-400 mb-2">PDF fayl yuklash</label>
+                    <input type="file" name="ebook_file" accept=".pdf,application/pdf"
+                           class="w-full text-xs text-slate-300 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 cursor-pointer
+                                  file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold
+                                  file:bg-purple-600 file:text-white hover:file:bg-purple-700">
+                </div>
+
+                <!-- Qo'shimcha -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                    <h2 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                        <i class="fas fa-list-alt text-cyan-400"></i> Qo'shimcha ma'lumotlar
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Til</label>
+                            <select name="language" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none">
+                                <option value="">— Tanlang —</option>
+                                <%c++ auto bookLang = getOr(book, "language"); %>
+                                <option value="uz" <%c++ if (bookLang=="uz") AdminBookForm_tmp_stream << "selected"; %>>O'zbek</option>
+                                <option value="ru" <%c++ if (bookLang=="ru") AdminBookForm_tmp_stream << "selected"; %>>Rus</option>
+                                <option value="en" <%c++ if (bookLang=="en") AdminBookForm_tmp_stream << "selected"; %>>Ingliz</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Sahifalar soni</label>
+                            <input type="number" name="total_pages" min="1"
+                                   value="<%c++ AdminBookForm_tmp_stream << getOr(book, "total_pages"); %>"
+                                   placeholder="masalan: 350"
+                                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Tugmalar -->
                 <div class="flex items-center gap-3">
                     <button type="submit"
@@ -175,5 +248,20 @@
         </div>
     </main>
 </div>
+<script>
+document.getElementById('coverInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img  = document.getElementById('coverPreview');
+        const icon = document.getElementById('coverIcon');
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        if (icon) icon.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+});
+</script>
 </body>
 </html>

@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <tuple>
 
 // ── Tiplar ────────────────────────────────────────────────────────────────────
 using Row     = std::map<std::string, std::string>;
@@ -186,6 +187,87 @@ inline void apiDelete(const std::string& path,
         [cb, client](drogon::ReqResult res, const drogon::HttpResponsePtr& resp) {
             if (res == drogon::ReqResult::Ok && resp) cb(resp->statusCode());
             else cb(503);
+        });
+}
+
+// ── Fayl yuklash uchun tip: (filename, content_type, binary_data) ────────────
+using FileData = std::tuple<std::string, std::string, std::string>;
+
+inline std::string buildMultipartBody(
+    const std::string& boundary,
+    const std::map<std::string, std::string>& fields,
+    const std::map<std::string, FileData>& files)
+{
+    std::string body;
+    for (const auto& kv : fields) {
+        if (kv.second.empty()) continue;
+        body += "--" + boundary + "\r\n";
+        body += "Content-Disposition: form-data; name=\"" + kv.first + "\"\r\n\r\n";
+        body += kv.second + "\r\n";
+    }
+    for (const auto& kv : files) {
+        const auto& fname = std::get<0>(kv.second);
+        const auto& ct    = std::get<1>(kv.second);
+        const auto& data  = std::get<2>(kv.second);
+        if (data.empty()) continue;
+        body += "--" + boundary + "\r\n";
+        body += "Content-Disposition: form-data; name=\"" + kv.first + "\"; filename=\"" + fname + "\"\r\n";
+        body += "Content-Type: " + ct + "\r\n\r\n";
+        body += data + "\r\n";
+    }
+    body += "--" + boundary + "--\r\n";
+    return body;
+}
+
+inline void apiPostMultipart(
+    const std::string& path,
+    const std::map<std::string, std::string>& fields,
+    const std::map<std::string, FileData>& files,
+    std::function<void(int, const Json::Value&)> cb,
+    bool adminAuth = false)
+{
+    std::string bnd = "TATUBoundary" + drogon::utils::getUuid().substr(0, 16);
+    std::string body = buildMultipartBody(bnd, fields, files);
+    auto client = drogon::HttpClient::newHttpClient(apiUrl());
+    auto r2 = drogon::HttpRequest::newHttpRequest();
+    r2->setMethod(drogon::Post);
+    r2->setPath(path);
+    r2->setBody(body);
+    r2->addHeader("Content-Type", "multipart/form-data; boundary=" + bnd);
+    if (adminAuth) r2->addHeader("X-Admin-Token", adminToken());
+    client->sendRequest(r2,
+        [cb, client](drogon::ReqResult res, const drogon::HttpResponsePtr& resp) {
+            if (res == drogon::ReqResult::Ok && resp) {
+                Json::Value d;
+                if (resp->getJsonObject()) d = *resp->getJsonObject();
+                cb(resp->statusCode(), d);
+            } else { Json::Value e; e["error"] = "API xato"; cb(503, e); }
+        });
+}
+
+inline void apiPatchMultipart(
+    const std::string& path,
+    const std::map<std::string, std::string>& fields,
+    const std::map<std::string, FileData>& files,
+    std::function<void(int, const Json::Value&)> cb,
+    bool adminAuth = false)
+{
+    std::string bnd = "TATUBoundary" + drogon::utils::getUuid().substr(0, 16);
+    std::string body = buildMultipartBody(bnd, fields, files);
+    auto client = drogon::HttpClient::newHttpClient(apiUrl());
+    auto r2 = drogon::HttpRequest::newHttpRequest();
+    r2->setMethod(drogon::HttpMethod::Patch);
+    r2->setPath(path);
+    r2->setBody(body);
+    r2->addHeader("Content-Type", "multipart/form-data; boundary=" + bnd);
+    if (adminAuth) r2->addHeader("X-Admin-Token", adminToken());
+    client->sendRequest(r2,
+        [cb, client](drogon::ReqResult res, const drogon::HttpResponsePtr& resp) {
+            if (res == drogon::ReqResult::Ok && resp) {
+                Json::Value d;
+                if (resp->getJsonObject()) d = *resp->getJsonObject();
+                cb(resp->statusCode(), d);
+            } else { Json::Value e; e["error"] = "API xato"; cb(503, e); }
         });
 }
 
