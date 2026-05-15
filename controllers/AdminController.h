@@ -20,8 +20,9 @@ public:
         ADD_METHOD_TO(AdminController::cardAction,        "/admin/kartalar/{id}/holat", Post);
         ADD_METHOD_TO(AdminController::reservations,      "/admin/bronlar",             Get);
         ADD_METHOD_TO(AdminController::cancelReservation, "/admin/bronlar/{id}/bekor",  Post);
-        ADD_METHOD_TO(AdminController::issues,            "/admin/berishlar",           Get);
-        ADD_METHOD_TO(AdminController::addIssue,          "/admin/berishlar/yangi",     Post);
+        ADD_METHOD_TO(AdminController::issues,            "/admin/berishlar",                  Get);
+        ADD_METHOD_TO(AdminController::addIssue,          "/admin/berishlar/yangi",            Post);
+        ADD_METHOD_TO(AdminController::returnBook,        "/admin/berishlar/{id}/qaytarildi",  Post);
         ADD_METHOD_TO(AdminController::logout,            "/admin/chiqish",             Get);
         ADD_METHOD_TO(AdminController::analytics,         "/admin/analitika",           Get);
         ADD_METHOD_TO(AdminController::exportCsv,         "/admin/csv/{type}",          Get);
@@ -44,6 +45,7 @@ public:
     void cancelReservation(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
     void issues           (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
     void addIssue         (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
+    void returnBook       (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
     void logout           (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
     void analytics        (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
     void exportCsv        (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, const std::string& type);

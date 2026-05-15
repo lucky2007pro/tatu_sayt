@@ -124,6 +124,16 @@
                        class="text-sm px-3 py-2 rounded-lg border border-slate-200 focus:border-blue-400 outline-none bg-white w-44">
             </div>
 
+            <!-- Filter tabs -->
+            <div class="flex gap-2 mb-4">
+                <button onclick="setFilter('all')" id="tab-all"
+                        class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition">Barchasi</button>
+                <button onclick="setFilter('active')" id="tab-active"
+                        class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Faol</button>
+                <button onclick="setFilter('returned')" id="tab-returned"
+                        class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Qaytarilgan</button>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <%c++ if (issues.empty()) { %>
                 <div class="text-center py-16">
@@ -141,16 +151,19 @@
                                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Berilgan</th>
                                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Qaytarish</th>
                                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Holat</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Amal</th>
                             </tr>
                         </thead>
                         <tbody>
                         <%c++
                             int idx = 1;
                             for (const auto& iss : issues) {
-                                std::string retDate = getOr(iss, "return_date");
-                                bool overdue = false;
+                                std::string retDate   = getOr(iss, "return_date");
+                                std::string issueId   = getOr(iss, "id");
+                                bool returned = (getOr(iss, "is_returned") == "True");
                         %>
-                            <tr class="border-b border-slate-50 hover:bg-slate-50 transition issue-row">
+                            <tr class="border-b border-slate-50 hover:bg-slate-50 transition issue-row"
+                                data-returned="<%c++ AdminIssues_tmp_stream << (returned ? "1" : "0"); %>">
                                 <td class="px-4 py-3 text-slate-400 font-mono text-xs"><%c++ AdminIssues_tmp_stream << idx++; %></td>
                                 <td class="px-4 py-3 font-medium text-slate-700">
                                     <%c++ AdminIssues_tmp_stream << getOr(iss, "reader_name", "—"); %>
@@ -168,9 +181,29 @@
                                     <%c++ AdminIssues_tmp_stream << retDate; %>
                                 </td>
                                 <td class="px-4 py-3">
+                                    <%c++ if (returned) { %>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                        <i class="fas fa-check-circle text-xs"></i> Qaytarilgan
+                                    </span>
+                                    <%c++ } else { %>
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
                                         <i class="fas fa-clock text-xs"></i> Faol
                                     </span>
+                                    <%c++ } %>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <%c++ if (!returned) { %>
+                                    <form method="POST" action="/admin/berishlar/<%c++ AdminIssues_tmp_stream << issueId; %>/qaytarildi"
+                                          onsubmit="return confirm('Kitob qaytarildi deb belgilashni tasdiqlaysizmi?')">
+                                        <input type="hidden" name="csrf_token" value="<%c++ AdminIssues_tmp_stream << csrf; %>">
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white transition">
+                                            <i class="fas fa-undo-alt"></i> Qaytarildi
+                                        </button>
+                                    </form>
+                                    <%c++ } else { %>
+                                    <span class="text-xs text-slate-300">—</span>
+                                    <%c++ } %>
                                 </td>
                             </tr>
                         <%c++ } %>
@@ -191,10 +224,29 @@ document.getElementById('returnDate').min = new Date().toISOString().split('T')[
 const d = new Date(); d.setDate(d.getDate() + 14);
 document.getElementById('returnDate').value = d.toISOString().split('T')[0];
 
+let currentFilter = 'all';
+
+function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-blue-600','text-white');
+        b.classList.add('bg-white','border','border-slate-200','text-slate-600');
+    });
+    const active = document.getElementById('tab-' + f);
+    active.classList.add('bg-blue-600','text-white');
+    active.classList.remove('bg-white','border','border-slate-200','text-slate-600');
+    filterTable();
+}
+
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
     document.querySelectorAll('.issue-row').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        const ret = row.dataset.returned;
+        const matchFilter = currentFilter === 'all'
+            || (currentFilter === 'active'   && ret === '0')
+            || (currentFilter === 'returned' && ret === '1');
+        const matchSearch = row.textContent.toLowerCase().includes(q);
+        row.style.display = (matchFilter && matchSearch) ? '' : 'none';
     });
 }
 </script>

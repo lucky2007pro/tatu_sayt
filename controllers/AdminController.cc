@@ -380,7 +380,7 @@ void AdminController::issues(const HttpRequestPtr& req,
         [csrf, flashMsg, flashType, cb = std::move(cb)](bool, const Json::Value& ij) mutable
     {
         RowList issues = jsonArrayToRows(ij,
-            {"id","book","book_title","reader","reader_name","issue_date","return_date"});
+            {"id","book","book_title","reader","reader_name","issue_date","return_date","is_returned"});
 
         apiGet("/api/readers/",
             [csrf, flashMsg, flashType, issues, cb = std::move(cb)](bool, const Json::Value& rj) mutable
@@ -404,6 +404,26 @@ void AdminController::issues(const HttpRequestPtr& req,
             }, "", true);
         }, "", true);
     }, "", true);
+}
+
+void AdminController::returnBook(const HttpRequestPtr& req,
+                                 std::function<void(const HttpResponsePtr&)>&& cb,
+                                 int id)
+{
+    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+    if (!isAdmin(req)) { cb(redirect("/admin")); return; }
+
+    apiPost("/api/issues/" + std::to_string(id) + "/return/", Json::Value(),
+        [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {
+            bool ok = status < 400;
+            std::string msg = ok ? "Kitob qaytarildi deb belgilandi."
+                                 : "Xato yuz berdi.";
+            if (!ok && data.isObject() && data.isMember("detail"))
+                msg = data["detail"].asString();
+            req->session()->insert("flash_msg",  msg);
+            req->session()->insert("flash_type", ok ? std::string("success") : std::string("error"));
+            cb(redirect("/admin/berishlar"));
+        }, "", true);
 }
 
 void AdminController::addIssue(const HttpRequestPtr& req,
