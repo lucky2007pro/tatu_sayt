@@ -70,14 +70,9 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Karta rasmi (ixtiyoriy)</label>
-                        <input type="file" name="card_image" accept="image/*"
-                               class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 border border-dashed border-slate-300 rounded-lg p-2">
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs px-4 py-3 rounded-lg">
-                        ℹ️ Ro'yxatdan o'tganingizdan so'ng admin tomonidan tasdiqlanishingiz kerak bo'ladi.
+                    <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs px-4 py-3 rounded-lg space-y-1">
+                        <p>ℹ️ Ro'yxatdan o'tgach, <strong>profilingizda</strong> kerakli kutubxona uchun karta rasmini yuklang.</p>
+                        <p class="text-blue-500">Har bir kutubxona uchun alohida karta tasdiqlanadi.</p>
                     </div>
 
                     <button type="submit" class="btn-primary w-full py-3 text-sm mt-1">Ro'yxatdan o'tish</button>
