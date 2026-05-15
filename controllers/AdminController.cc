@@ -182,36 +182,11 @@ void AdminController::addBook(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
     if (!isAdmin(req)) { cb(redirect("/admin")); return; }
 
-    std::map<std::string, std::string> fields;
-    fields["title"]          = req->getParameter("title");
-    fields["author_name"]    = req->getParameter("author_name");
-    fields["isbn"]           = req->getParameter("isbn");
-    fields["published_date"] = req->getParameter("published_date");
-    fields["description"]    = req->getParameter("description");
-    fields["shelf"]          = req->getParameter("shelf");
-    fields["row"]            = req->getParameter("row");
-    fields["language"]       = req->getParameter("language");
-    fields["total_pages"]    = req->getParameter("total_pages");
-    std::string libId = req->getParameter("library");
-    std::string secId = req->getParameter("section");
-    if (!libId.empty()) fields["library"] = libId;
-    if (!secId.empty()) fields["section"] = secId;
+    const auto& bv = req->getBody();
+    std::string rawBody(bv.data(), bv.size());
+    std::string ct = req->getHeader("Content-Type");
 
-    std::map<std::string, FileData> files;
-    for (const auto& f : req->getUploadedFiles()) {
-        auto sv = f.fileContent();
-        if (sv.empty()) continue;
-        std::string content(sv.data(), sv.size());
-        std::string ct   = f.getContentType();
-        std::string fn   = f.getFileName();
-        std::string item = f.itemName();
-        if (item == "cover_image" && ct.find("image") != std::string::npos)
-            files["cover_image"] = {fn, ct, content};
-        else if (item == "ebook_file")
-            files["ebook_file"] = {fn, "application/pdf", content};
-    }
-
-    apiPostMultipart("/api/books/", fields, files,
+    apiPostMultipartRaw("/api/books/", rawBody, ct,
         [req, cb = std::move(cb)](int status, const Json::Value&) mutable {
             bool ok = status < 400;
             req->session()->insert("flash_msg",
@@ -266,36 +241,11 @@ void AdminController::editBook(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
     if (!isAdmin(req)) { cb(redirect("/admin")); return; }
 
-    std::map<std::string, std::string> fields;
-    fields["title"]          = req->getParameter("title");
-    fields["author_name"]    = req->getParameter("author_name");
-    fields["isbn"]           = req->getParameter("isbn");
-    fields["published_date"] = req->getParameter("published_date");
-    fields["description"]    = req->getParameter("description");
-    fields["shelf"]          = req->getParameter("shelf");
-    fields["row"]            = req->getParameter("row");
-    fields["language"]       = req->getParameter("language");
-    fields["total_pages"]    = req->getParameter("total_pages");
-    std::string libId = req->getParameter("library");
-    std::string secId = req->getParameter("section");
-    if (!libId.empty()) fields["library"] = libId;
-    if (!secId.empty()) fields["section"] = secId;
+    const auto& bv = req->getBody();
+    std::string rawBody(bv.data(), bv.size());
+    std::string ct = req->getHeader("Content-Type");
 
-    std::map<std::string, FileData> files;
-    for (const auto& f : req->getUploadedFiles()) {
-        auto sv = f.fileContent();
-        if (sv.empty()) continue;
-        std::string content(sv.data(), sv.size());
-        std::string ct   = f.getContentType();
-        std::string fn   = f.getFileName();
-        std::string item = f.itemName();
-        if (item == "cover_image" && ct.find("image") != std::string::npos)
-            files["cover_image"] = {fn, ct, content};
-        else if (item == "ebook_file")
-            files["ebook_file"] = {fn, "application/pdf", content};
-    }
-
-    apiPatchMultipart("/api/books/" + std::to_string(id) + "/", fields, files,
+    apiPatchMultipartRaw("/api/books/" + std::to_string(id) + "/", rawBody, ct,
         [req, id, cb = std::move(cb)](int status, const Json::Value&) mutable {
             bool ok = status < 400;
             req->session()->insert("flash_msg",

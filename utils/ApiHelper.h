@@ -271,6 +271,55 @@ inline void apiPatchMultipart(
         });
 }
 
+// ── Raw multipart proxy: butun body'ni Django ga yo'naltiradi ───────────────
+inline void apiPostMultipartRaw(
+    const std::string& path,
+    const std::string& rawBody,
+    const std::string& contentType,
+    std::function<void(int, const Json::Value&)> cb,
+    bool adminAuth = false)
+{
+    auto client = drogon::HttpClient::newHttpClient(apiUrl());
+    auto r2 = drogon::HttpRequest::newHttpRequest();
+    r2->setMethod(drogon::Post);
+    r2->setPath(path);
+    r2->setBody(rawBody);
+    r2->addHeader("Content-Type", contentType);
+    if (adminAuth) r2->addHeader("X-Admin-Token", adminToken());
+    client->sendRequest(r2,
+        [cb, client](drogon::ReqResult res, const drogon::HttpResponsePtr& resp) {
+            if (res == drogon::ReqResult::Ok && resp) {
+                Json::Value d;
+                if (resp->getJsonObject()) d = *resp->getJsonObject();
+                cb(resp->statusCode(), d);
+            } else { Json::Value e; e["error"] = "API xato"; cb(503, e); }
+        });
+}
+
+inline void apiPatchMultipartRaw(
+    const std::string& path,
+    const std::string& rawBody,
+    const std::string& contentType,
+    std::function<void(int, const Json::Value&)> cb,
+    bool adminAuth = false)
+{
+    auto client = drogon::HttpClient::newHttpClient(apiUrl());
+    auto r2 = drogon::HttpRequest::newHttpRequest();
+    r2->setMethod(drogon::HttpMethod::Patch);
+    r2->setPath(path);
+    r2->setBody(rawBody);
+    r2->addHeader("Content-Type", contentType);
+    if (adminAuth) r2->addHeader("X-Admin-Token", adminToken());
+    client->sendRequest(r2,
+        [cb, client](drogon::ReqResult res, const drogon::HttpResponsePtr& resp) {
+            if (res == drogon::ReqResult::Ok && resp) {
+                Json::Value d;
+                if (resp->getJsonObject()) d = *resp->getJsonObject();
+                cb(resp->statusCode(), d);
+            } else { Json::Value e; e["error"] = "API xato"; cb(503, e); }
+        });
+}
+
 // ── Session yordamchilari ─────────────────────────────────────────────────────
 inline bool isLoggedIn(const drogon::HttpRequestPtr& req) {
     return req->session()->find("reader_token");
