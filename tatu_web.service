@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/tatu_web
-ExecStart=/opt/tatu_web/tatu_web
+WorkingDirectory=/opt/tatu_web/build
+ExecStart=/opt/tatu_web/build/tatu_web
 Restart=on-failure
 RestartSec=5
 
