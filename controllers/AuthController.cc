@@ -18,7 +18,13 @@ void AuthController::loginForm(const HttpRequestPtr& req,
 void AuthController::handleLogin(const HttpRequestPtr& req,
                                  std::function<void(const HttpResponsePtr&)>&& cb)
 {
-    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+    if (!checkCsrf(req)) {
+        HttpViewData vd;
+        vd.insert("csrf_token", ensureCsrf(req));
+        vd.insert("error_msg",  std::string("Sessiya muddati tugagan. Sahifani yangilab qayta urinib ko'ring."));
+        cb(HttpResponse::newHttpViewResponse("Login", vd));
+        return;
+    }
 
     std::string phone    = req->getParameter("phone");
     std::string password = req->getParameter("password");
@@ -75,7 +81,13 @@ void AuthController::registerForm(const HttpRequestPtr& req,
 void AuthController::handleReg(const HttpRequestPtr& req,
                                std::function<void(const HttpResponsePtr&)>&& cb)
 {
-    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+    if (!checkCsrf(req)) {
+        HttpViewData vd;
+        vd.insert("csrf_token", ensureCsrf(req));
+        vd.insert("error_msg",  std::string("Sessiya muddati tugagan. Sahifani yangilab qayta urinib ko'ring."));
+        cb(HttpResponse::newHttpViewResponse("Register", vd));
+        return;
+    }
 
     std::string fullname  = req->getParameter("fullname");
     std::string phone     = req->getParameter("phone");
