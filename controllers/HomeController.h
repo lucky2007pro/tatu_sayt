@@ -11,6 +11,9 @@ public:
         ADD_METHOD_TO(HomeController::about,          "/haqida",              Get);
         ADD_METHOD_TO(HomeController::libraryDetail,   "/kutubxona/{id}",      Get);
         ADD_METHOD_TO(HomeController::favourites,      "/sevimlilar",          Get);
+        ADD_METHOD_TO(HomeController::favouriteToggle, "/sevimli/{id}/toggle", Post);
+        ADD_METHOD_TO(HomeController::favouriteRemove, "/sevimli/{id}/ochir",  Post);
+        ADD_METHOD_TO(HomeController::favouriteIds,    "/api/my-favourite-ids", Get);
     METHOD_LIST_END
 
     void index         (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
@@ -19,4 +22,7 @@ public:
     void about         (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
     void libraryDetail (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
     void favourites    (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
+    void favouriteToggle(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
+    void favouriteRemove(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
+    void favouriteIds  (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
 };

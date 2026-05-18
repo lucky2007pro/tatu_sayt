@@ -199,7 +199,7 @@
         %>
         <div class="book-card bg-white rounded-xl overflow-hidden border <%c++ Index_tmp_stream << (avail ? "border-slate-200" : (issued ? "border-orange-300" : "border-yellow-300")); %> relative group">
         <%c++ if (avail) { %>
-        <button onclick="toggleFav(event,'<%c++ Index_tmp_stream << bid; %>','<%c++ Index_tmp_stream << bname; %>','<%c++ Index_tmp_stream << bauth; %>','<%c++ Index_tmp_stream << bcover; %>',true)"
+        <button onclick="toggleFav(event,'<%c++ Index_tmp_stream << bid; %>')"
                 id="fav-<%c++ Index_tmp_stream << bid; %>"
                 class="absolute top-2 right-2 z-10 w-8 h-8 bg-white/90 rounded-full shadow text-slate-300 text-sm hidden group-hover:flex items-center justify-center hover:text-red-500 transition">
             <i class="fas fa-heart"></i>
@@ -267,30 +267,53 @@
 </main>
 
 <script>
-// ── Sevimlilar ────────────────────────────────────────────────────────────────
-const LS_KEY = 'tatu_favourites';
-function getFavs() { try { return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch { return []; } }
-function toggleFav(e, id, title, author, cover, avail) {
-    e.preventDefault(); e.stopPropagation();
-    let favs = getFavs();
-    const idx = favs.findIndex(f => String(f.id) === String(id));
-    if (idx >= 0) { favs.splice(idx, 1); }
-    else { favs.unshift({id, title, author, cover, avail}); }
-    localStorage.setItem(LS_KEY, JSON.stringify(favs));
-    updateHearts();
+// ── Sevimlilar (server-side, har foydalanuvchi uchun alohida) ────────────────
+const CSRF_TOKEN = "<%c++ Index_tmp_stream << csrf; %>";
+const IS_LOGGED_IN = <%c++ Index_tmp_stream << (loggedIn ? "true" : "false"); %>;
+let favouriteIds = new Set();
+
+async function loadFavourites() {
+    if (!IS_LOGGED_IN) return;
+    try {
+        const r = await fetch('/api/my-favourite-ids', { credentials: 'same-origin' });
+        if (!r.ok) return;
+        const ids = await r.json();
+        favouriteIds = new Set(ids.map(String));
+        updateHearts();
+    } catch (e) { /* sukut bilan o'tkazib yuboramiz */ }
 }
+
+async function toggleFav(e, id) {
+    e.preventDefault(); e.stopPropagation();
+    if (!IS_LOGGED_IN) {
+        if (confirm("Sevimliga qo'shish uchun tizimga kiring. Hozir kirasizmi?"))
+            window.location.href = '/kirish?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return;
+    }
+    const form = new FormData();
+    form.append('csrf_token', CSRF_TOKEN);
+    try {
+        const r = await fetch('/sevimli/' + id + '/toggle', {
+            method: 'POST', body: form, credentials: 'same-origin'
+        });
+        if (!r.ok) { console.error('toggle xato', r.status); return; }
+        const data = await r.json();
+        if (data.is_favourite) favouriteIds.add(String(id));
+        else favouriteIds.delete(String(id));
+        updateHearts();
+    } catch (err) { console.error(err); }
+}
+
 function updateHearts() {
-    const favs = getFavs();
-    const ids  = new Set(favs.map(f => String(f.id)));
     document.querySelectorAll('[id^="fav-"]').forEach(btn => {
         const bid = btn.id.replace('fav-','');
-        btn.style.color = ids.has(bid) ? '#ef4444' : '';
+        btn.style.color = favouriteIds.has(bid) ? '#ef4444' : '';
         btn.classList.add('flex');
         btn.classList.remove('hidden');
     });
     const cnt = document.getElementById('fav-count');
     if (cnt) {
-        if (favs.length > 0) { cnt.textContent = favs.length; cnt.classList.remove('hidden'); }
+        if (favouriteIds.size > 0) { cnt.textContent = favouriteIds.size; cnt.classList.remove('hidden'); }
         else cnt.classList.add('hidden');
     }
 }
@@ -330,7 +353,7 @@ function hideHistory() {
     if (box) box.classList.add('hidden');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    updateHearts();
+    loadFavourites();
     const form = document.getElementById('search-form');
     if (form) form.addEventListener('submit', () => {
         const q = document.getElementById('search-input')?.value;

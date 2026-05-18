@@ -212,14 +212,36 @@ void HomeController::favourites(const HttpRequestPtr& req,
     if (!isLoggedIn(req)) { cb(redirect("/kirish?next=/sevimlilar")); return; }
 
     bool loggedIn = true;
-    std::string name = sessionStr(req, "reader_name", "");
-    bool approved    = sessionBool(req, "reader_approved");
+    std::string name  = sessionStr(req, "reader_name", "");
+    bool approved     = sessionBool(req, "reader_approved");
+    std::string token = sessionStr(req, "reader_token");
+    std::string csrf  = ensureCsrf(req);
 
-    HttpViewData data;
-    data.insert("is_logged_in",   loggedIn);
-    data.insert("reader_name",    name);
-    data.insert("reader_approved",approved);
-    cb(HttpResponse::newHttpViewResponse("Favourites", data));
+    std::string flashMsg  = sessionStr(req, "flash_msg");
+    std::string flashType = sessionStr(req, "flash_type");
+    if (!flashMsg.empty()) {
+        req->session()->erase("flash_msg");
+        req->session()->erase("flash_type");
+    }
+
+    apiGet("/api/favourites/?page_size=1000",
+        [loggedIn, name, approved, csrf, flashMsg, flashType, cb = std::move(cb)]
+        (bool, const Json::Value& fj) mutable
+    {
+        RowList favourites = jsonArrayToRows(fj,
+            {"id","book","book_title","book_cover","author_name",
+             "library_name","availability_status","average_rating","created_at"});
+
+        HttpViewData data;
+        data.insert("favourites",     favourites);
+        data.insert("is_logged_in",   loggedIn);
+        data.insert("reader_name",    name);
+        data.insert("reader_approved",approved);
+        data.insert("csrf_token",     csrf);
+        data.insert("flash_msg",      flashMsg);
+        data.insert("flash_type",     flashType);
+        cb(HttpResponse::newHttpViewResponse("Favourites", data));
+    }, token);
 }
 
 // ── Haqida ────────────────────────────────────────────────────────────────────
@@ -233,4 +255,89 @@ void HomeController::about(const HttpRequestPtr& req,
     data.insert("is_logged_in", loggedIn);
     data.insert("reader_name",  name);
     cb(HttpResponse::newHttpViewResponse("About", data));
+}
+
+// ── Sevimli toggle (POST form orqali, AJAX uchun ham) ─────────────────────────
+void HomeController::favouriteToggle(const HttpRequestPtr& req,
+                                     std::function<void(const HttpResponsePtr&)>&& cb,
+                                     int id)
+{
+    if (!checkCsrf(req)) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::k403Forbidden);
+        resp->setBody("{\"detail\":\"CSRF xato\"}");
+        resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        cb(resp); return;
+    }
+    if (!isLoggedIn(req)) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::k401Unauthorized);
+        resp->setBody("{\"detail\":\"Tizimga kiring\"}");
+        resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        cb(resp); return;
+    }
+
+    std::string token = sessionStr(req, "reader_token");
+    Json::Value body;
+    body["book"] = id;
+
+    apiPost("/api/favourites/toggle/", body,
+        [cb = std::move(cb)](int status, const Json::Value& data) mutable {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setStatusCode(static_cast<drogon::HttpStatusCode>(status));
+            resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            Json::FastWriter w;
+            resp->setBody(w.write(data));
+            cb(resp);
+        }, token);
+}
+
+// ── Sevimlilardan o'chirish (form orqali) ─────────────────────────────────────
+void HomeController::favouriteRemove(const HttpRequestPtr& req,
+                                     std::function<void(const HttpResponsePtr&)>&& cb,
+                                     int id)
+{
+    if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
+    if (!isLoggedIn(req)) { cb(redirect("/kirish")); return; }
+
+    std::string token = sessionStr(req, "reader_token");
+
+    // POST /api/favourites/toggle/ — sevimli bo'lsa o'chiradi
+    Json::Value body;
+    body["book"] = id;
+
+    apiPost("/api/favourites/toggle/", body,
+        [req, cb = std::move(cb)](int status, const Json::Value&) mutable {
+            bool ok = status >= 200 && status < 300;
+            req->session()->insert("flash_msg",
+                ok ? std::string("Sevimlilardan olib tashlandi.")
+                   : std::string("Xato yuz berdi."));
+            req->session()->insert("flash_type",
+                ok ? std::string("success") : std::string("error"));
+            cb(redirect("/sevimlilar"));
+        }, sessionStr(req, "reader_token"));
+}
+
+// ── Sevimli kitoblar IDsi (Index sahifasi uchun) ──────────────────────────────
+void HomeController::favouriteIds(const HttpRequestPtr& req,
+                                  std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    if (!isLoggedIn(req)) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::k200OK);
+        resp->setBody("[]");
+        resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        cb(resp); return;
+    }
+    std::string token = sessionStr(req, "reader_token");
+
+    apiGet("/api/favourites/ids/",
+        [cb = std::move(cb)](bool, const Json::Value& data) mutable {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setStatusCode(drogon::k200OK);
+            resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            Json::FastWriter w;
+            resp->setBody(w.write(data));
+            cb(resp);
+        }, token);
 }
