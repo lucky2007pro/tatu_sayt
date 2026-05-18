@@ -42,7 +42,7 @@ void DashboardController::index(const HttpRequestPtr& req,
              cb = std::move(cb)](bool, const Json::Value& resJson) mutable
         {
             RowList reservations = jsonArrayToRows(resJson,
-                {"id","book","book_title","reserved_at","note"});
+                {"id","book","book_title","reserved_at","note","expires_at","days_remaining","is_expired"});
 
             // 2) O'qish tarixi (Issues)
             apiGet("/api/issues/?mine=1",

@@ -39,7 +39,10 @@
     auto& similar   = @@.get<RowList>("similar");
     auto bookId     = getOr(book, "id");
     auto bookName   = getOr(book, "title", "Kitob");
-    bool isAvail    = (getOr(book, "is_available", "True") == "True");
+    std::string bookStatus = getOr(book, "availability_status", "available");
+    bool isAvail    = (bookStatus == "available");
+    bool isIssued   = (bookStatus == "issued");
+    bool isReserved = (bookStatus == "reserved");
     bool canReserve = isAvail;
 %>
 
@@ -90,8 +93,8 @@
                 <%c++ } %>
                 <div class="absolute top-3 right-3">
                     <span class="text-xs font-bold px-2.5 py-1 rounded-full
-                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
-                        <%c++ if (isAvail) { %>✅ Mavjud<%c++ } else { %>🔒 Band qilingan<%c++ } %>
+                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else if (isIssued) { %>bg-orange-100 text-orange-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                        <%c++ if (isAvail) { %>✅ Mavjud<%c++ } else if (isIssued) { %>� Berilgan<%c++ } else { %>🔖 Bron qilingan<%c++ } %>
                     </span>
                 </div>
             </div>

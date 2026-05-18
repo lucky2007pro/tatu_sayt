@@ -193,7 +193,7 @@ void HomeController::libraryDetail(const HttpRequestPtr& req,
             [loggedIn, name, lib, cb = std::move(cb)](bool, const Json::Value& bj) mutable
         {
             RowList books = jsonArrayToRows(bj,
-                {"id","title","author_name","section_name","is_available","cover_image","average_rating"});
+                {"id","title","author_name","section_name","is_available","availability_status","cover_image","average_rating"});
 
             HttpViewData data;
             data.insert("library",     lib);

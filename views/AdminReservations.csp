@@ -89,6 +89,7 @@
                         <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">O'quvchi</th>
                         <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Kitob</th>
                         <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Bron sanasi</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Muddati</th>
                         <th class="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Amal</th>
                     </tr>
                 </thead>
@@ -115,6 +116,25 @@
                         <td class="px-4 py-3 text-slate-500 text-xs">
                             <%c++ std::string dt = getOr(r, "reserved_at");
                                   AdminReservations_tmp_stream << (dt.size() > 10 ? dt.substr(0,10) : dt); %>
+                        </td>
+                        <td class="px-4 py-3 text-xs">
+                            <%c++ {
+                                std::string dr = getOr(r, "days_remaining", "0");
+                                std::string exp = getOr(r, "expires_at");
+                                int days = 0;
+                                try { days = std::stoi(dr); } catch (...) {}
+                                std::string color;
+                                std::string label;
+                                if (days >= 2) { color = "bg-green-100 text-green-700"; label = std::to_string(days) + " kun qoldi"; }
+                                else if (days == 1) { color = "bg-yellow-100 text-yellow-700"; label = "1 kun qoldi"; }
+                                else if (days == 0) { color = "bg-orange-100 text-orange-700"; label = "Bugun tugaydi"; }
+                                else { color = "bg-red-100 text-red-700"; label = "Muddati o'tdi"; }
+                            %>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full font-bold <%c++ AdminReservations_tmp_stream << color; %>">
+                                <i class="far fa-clock mr-1"></i><%c++ AdminReservations_tmp_stream << label; %>
+                            </span>
+                            <div class="text-[10px] text-slate-400 mt-1"><%c++ AdminReservations_tmp_stream << (exp.size() > 10 ? exp.substr(0,10) : exp); %></div>
+                            <%c++ } %>
                         </td>
                         <td class="px-4 py-3 text-right">
                             <form action="/admin/bronlar/<%c++ AdminReservations_tmp_stream << getOr(r, "id"); %>/bekor" method="POST"

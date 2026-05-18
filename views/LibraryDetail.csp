@@ -152,16 +152,17 @@
                 auto bauthor = getOr(b, "author_name");
                 auto bsec    = getOr(b, "section_name");
                 auto brating = getOr(b, "average_rating");
-                auto bavail  = getOr(b, "is_available", "False");
-                bool isAvail = (bavail == "True");
+                auto bstat   = getOr(b, "availability_status", "available");
+                bool isAvail = (bstat == "available");
+                bool isIssued = (bstat == "issued");
             %>
             <a href="/kitob/<%c++ LibraryDetail_tmp_stream << bid; %>"
                class="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-blue-300 transition flex flex-col gap-2">
                 <div class="flex items-start justify-between gap-2">
                     <h3 class="font-semibold text-slate-800 text-sm leading-snug flex-1"><%c++ LibraryDetail_tmp_stream << btitle; %></h3>
                     <span class="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0
-                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
-                        <%c++ if (isAvail) { %>✅<%c++ } else { %>🔒<%c++ } %>
+                        <%c++ if (isAvail) { %>bg-green-100 text-green-700<%c++ } else if (isIssued) { %>bg-orange-100 text-orange-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                        <%c++ if (isAvail) { %>✅<%c++ } else if (isIssued) { %>📤<%c++ } else { %>🔖<%c++ } %>
                     </span>
                 </div>
                 <%c++ if (!bauthor.empty()) { %>

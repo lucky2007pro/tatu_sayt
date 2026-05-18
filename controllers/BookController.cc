@@ -28,7 +28,7 @@ void BookController::detail(const HttpRequestPtr& req,
         }
         Row book = jsonObjectToRow(bookJson, {
             "id", "title", "author_name", "library_name", "section_name",
-            "is_available", "cover_image", "description", "average_rating",
+            "is_available", "availability_status", "cover_image", "description", "average_rating",
             "ratings_count", "view_count", "ebook_file",
             "published_date", "isbn", "shelf", "row"
         });

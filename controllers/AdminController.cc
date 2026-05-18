@@ -122,7 +122,7 @@ void AdminController::books(const HttpRequestPtr& req,
 
     apiGet("/api/books/", [=, cb = std::move(cb)](bool, const Json::Value& bj) mutable {
         RowList books = jsonArrayToRows(bj,
-            {"id","title","author_name","library_name","section_name","is_available",
+            {"id","title","author_name","library_name","section_name","is_available","availability_status",
              "cover_image","ebook_file"});
         HttpViewData data;
         data.insert("books",      books);
@@ -331,7 +331,7 @@ void AdminController::reservations(const HttpRequestPtr& req,
         [csrf, flashMsg, flashType, cb = std::move(cb)](bool, const Json::Value& rj) mutable
     {
         RowList reservations = jsonArrayToRows(rj,
-            {"id","book","book_title","reader","reader_name","reserved_at"});
+            {"id","book","book_title","reader","reader_name","reserved_at","expires_at","days_remaining","is_expired"});
 
         HttpViewData data;
         data.insert("reservations", reservations);

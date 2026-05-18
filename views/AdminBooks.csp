@@ -76,7 +76,9 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     <%c++ int i = 1; for (auto& b : books) {
-                        bool avail = (getOr(b, "is_available", "True") == "True");
+                        auto bstat = getOr(b, "availability_status", "available");
+                        bool avail = (bstat == "available");
+                        bool isIssued = (bstat == "issued");
                         auto bid = getOr(b, "id");
                     %>
                     <tr class="hover:bg-slate-50 transition">
@@ -106,8 +108,8 @@
                         <td class="px-5 py-3 text-sm text-slate-500"><%c++ AdminBooks_tmp_stream << getOr(b, "library_name", "—"); %></td>
                         <td class="px-5 py-3">
                             <span class="text-xs font-bold px-2.5 py-1 rounded-full
-                                <%c++ if (avail) { %>bg-green-100 text-green-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
-                                <%c++ if (avail) { %>✅ Mavjud<%c++ } else { %>🔒 Band<%c++ } %>
+                                <%c++ if (avail) { %>bg-green-100 text-green-700<%c++ } else if (isIssued) { %>bg-orange-100 text-orange-700<%c++ } else { %>bg-yellow-100 text-yellow-700<%c++ } %>">
+                                <%c++ if (avail) { %>✅ Mavjud<%c++ } else if (isIssued) { %>� Berilgan<%c++ } else { %>🔖 Bron<%c++ } %>
                             </span>
                         </td>
                         <td class="px-5 py-3">
