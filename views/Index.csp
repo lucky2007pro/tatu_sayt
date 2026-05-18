@@ -7,6 +7,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -70,6 +74,9 @@
             <a href="/statistika" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Statistika</a>
             <a href="/kutubxonalar" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50"><i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar</a>
             <a href="/haqida" class="hidden lg:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Haqida</a>
+            <a href="/ai-maslahatchi" class="hidden md:flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 px-3 py-2 rounded-lg hover:shadow-md transition">
+                <i class="fas fa-robot"></i>AI
+            </a>
             <a href="/sevimlilar" class="hidden md:flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition" id="nav-fav">
                 <i class="fas fa-heart"></i><span id="fav-count" class="hidden ml-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5"></span>
             </a>
@@ -349,26 +356,78 @@ function addHistory(q) {
     if (h.length > 8) h = h.slice(0, 8);
     localStorage.setItem(SH_KEY, JSON.stringify(h));
 }
+function escapeAttr(s){return String(s).replace(/'/g,"\\'").replace(/"/g,'\\"');}
+function escapeHtmlSimple(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+let acTimer = null;
+let acAbort = null;
 function showHistory() {
     const inp = document.getElementById('search-input');
     const box = document.getElementById('search-history');
     if (!inp || !box) return;
     const q = inp.value.trim();
+
+    // 1) Mahalliy tarix
     let h = getHistory();
     if (q) h = h.filter(x => x.toLowerCase().includes(q.toLowerCase()));
-    if (h.length === 0) { box.classList.add('hidden'); return; }
-    box.innerHTML = h.map(x =>
-        `<div class="px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 cursor-pointer flex items-center gap-2"
-              onclick="document.getElementById('search-input').value='${x.replace(/'/g,"\\'")}';document.getElementById('search-form').submit()">
-            <i class="fas fa-history text-slate-400 text-xs"></i>${x}
-        </div>`
-    ).join('') +
-    `<div class="px-4 py-2 text-xs text-slate-400 hover:bg-red-50 cursor-pointer border-t border-slate-100"
-          onclick="localStorage.removeItem('${SH_KEY}');document.getElementById('search-history').classList.add('hidden')">
-        <i class="fas fa-trash-alt mr-1"></i>Tarixni tozalash
-    </div>`;
+
+    // 2) Server autocomplete — debounce 250ms
+    if (acTimer) clearTimeout(acTimer);
+    if (acAbort) { try { acAbort.abort(); } catch {} acAbort = null; }
+
+    if (q.length < 2) {
+        renderSearchSuggestions(box, h, []);
+        return;
+    }
+
+    acTimer = setTimeout(() => {
+        acAbort = new AbortController();
+        fetch('/api/book-search?q=' + encodeURIComponent(q) + '&limit=6',
+              { signal: acAbort.signal, credentials: 'same-origin' })
+            .then(r => r.ok ? r.json() : [])
+            .then(items => renderSearchSuggestions(box, h, Array.isArray(items) ? items : []))
+            .catch(() => renderSearchSuggestions(box, h, []));
+    }, 250);
+
+    // Hozirgi cheklangan tarixni darhol ko'rsatamiz
+    renderSearchSuggestions(box, h, []);
+}
+
+function renderSearchSuggestions(box, history, books) {
+    let html = '';
+    if (books.length > 0) {
+        html += `<div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase bg-slate-50">Kitoblar</div>`;
+        html += books.map(b => `
+            <a href="/kitob/${b.id}" class="flex items-center gap-3 px-3 py-2 hover:bg-blue-50 transition border-b border-slate-50 last:border-0">
+                <div class="w-9 h-12 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
+                    ${b.cover ? `<img src="${escapeAttr(b.cover)}" class="w-full h-full object-cover rounded" alt="">`
+                              : `<i class="fas fa-book text-slate-300 text-sm"></i>`}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 truncate">${escapeHtmlSimple(b.title || '')}</p>
+                    <p class="text-[11px] text-slate-400 truncate">${escapeHtmlSimple(b.author || '')}${b.library ? ' · ' + escapeHtmlSimple(b.library) : ''}</p>
+                </div>
+            </a>
+        `).join('');
+    }
+    if (history.length > 0) {
+        html += `<div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase bg-slate-50 border-t border-slate-100">So'nggi qidiruv</div>`;
+        html += history.map(x => `
+            <div class="px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 cursor-pointer flex items-center gap-2"
+                 onclick="document.getElementById('search-input').value='${escapeAttr(x)}';document.getElementById('search-form').submit()">
+                <i class="fas fa-history text-slate-400 text-xs"></i>${escapeHtmlSimple(x)}
+            </div>
+        `).join('');
+        html += `<div class="px-4 py-2 text-xs text-slate-400 hover:bg-red-50 cursor-pointer border-t border-slate-100"
+                      onclick="localStorage.removeItem('${SH_KEY}');document.getElementById('search-history').classList.add('hidden')">
+                    <i class="fas fa-trash-alt mr-1"></i>Tarixni tozalash
+                </div>`;
+    }
+    if (html === '') { box.classList.add('hidden'); return; }
+    box.innerHTML = html;
     box.classList.remove('hidden');
 }
+
 function hideHistory() {
     const box = document.getElementById('search-history');
     if (box) box.classList.add('hidden');
@@ -416,6 +475,13 @@ function requestGeo(thenSubmit) {
         },
         { timeout: 10000, maximumAge: 600000 }
     );
+}
+
+// PWA service worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

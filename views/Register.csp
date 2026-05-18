@@ -53,6 +53,11 @@
                         <input type="text" name="phone" placeholder="+998 90 123 45 67" required class="input-field">
                     </div>
 
+                    <div>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Email <span class="text-slate-400 normal-case">(ixtiyoriy — bron eslatmalari uchun)</span></label>
+                        <input type="email" name="email" placeholder="siz@example.com" class="input-field">
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Parol</label>

@@ -354,3 +354,30 @@ void HomeController::favouriteIds(const HttpRequestPtr& req,
             cb(resp);
         }, token);
 }
+
+// ── Kitob qidiruv autocomplete (Index search uchun) ──────────────────────────
+void HomeController::bookSearch(const HttpRequestPtr& req,
+                                std::function<void(const HttpResponsePtr&)>&& cb)
+{
+    std::string q     = req->getParameter("q");
+    std::string limit = req->getParameter("limit");
+    if (limit.empty()) limit = "8";
+    if (q.size() < 2) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::k200OK);
+        resp->setBody("[]");
+        resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        cb(resp); return;
+    }
+
+    std::string path = "/api/books/autocomplete/?q=" + drogon::utils::urlEncode(q)
+                     + "&limit=" + drogon::utils::urlEncode(limit);
+    apiGet(path, [cb = std::move(cb)](bool, const Json::Value& data) mutable {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::k200OK);
+        resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        Json::FastWriter w;
+        resp->setBody(w.write(data));
+        cb(resp);
+    });
+}

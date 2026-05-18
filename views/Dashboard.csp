@@ -21,6 +21,15 @@
     auto  approved     = @@.get<bool>("reader_approved");
     auto& reservations = @@.get<RowList>("reservations");
     auto& issues       = @@.get<RowList>("issues");
+    auto& recommended  = @@.get<RowList>("recommended");
+    auto& badges       = @@.get<RowList>("badges");
+    auto& levelName    = @@.get<std::string>("level_name");
+    auto& levelTier    = @@.get<std::string>("level_tier");
+    auto& levelNext    = @@.get<std::string>("level_next");
+    auto& totalIssues  = @@.get<std::string>("total_issues");
+    auto& monthIssues  = @@.get<std::string>("month_issues");
+    auto& totalFav     = @@.get<std::string>("total_fav");
+    auto& totalRatings = @@.get<std::string>("total_ratings");
     auto& flashMsg     = @@.get<std::string>("flash_msg");
     auto& flashType    = @@.get<std::string>("flash_type");
     auto& csrf         = @@.get<std::string>("csrf_token");
@@ -100,6 +109,67 @@
         <span>Hisobingiz hali tasdiqlanmagan. Admin tasdiqlashidan keyin kitoblarni band qila olasiz.</span>
     </div>
     <%c++ } %>
+
+    <!-- Gamification — daraja va ko'rsatkichlar -->
+    <div class="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-2xl p-5 mb-8">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center text-2xl shadow-md">
+                    <%c++ if (levelTier == "5") { %>👑
+                    <%c++ } else if (levelTier == "4") { %>🎓
+                    <%c++ } else if (levelTier == "3") { %>📚
+                    <%c++ } else if (levelTier == "2") { %>📖
+                    <%c++ } else { %>🌱
+                    <%c++ } %>
+                </div>
+                <div>
+                    <p class="text-xs text-purple-600 font-semibold uppercase tracking-wide">Sizning darajangiz</p>
+                    <h2 class="text-xl font-black text-slate-800"><%c++ Dashboard_tmp_stream << levelName; %></h2>
+                    <%c++ if (!levelNext.empty()) { %>
+                    <p class="text-xs text-slate-500 mt-0.5">Keyingi darajaga: <strong><%c++ Dashboard_tmp_stream << levelNext; %></strong> kitobgacha</p>
+                    <%c++ } else { %>
+                    <p class="text-xs text-emerald-600 mt-0.5 font-semibold">Eng yuqori darajaga erishildi! 🎉</p>
+                    <%c++ } %>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 flex-shrink-0">
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalIssues; %></div>
+                    <div class="text-[10px] text-slate-500 uppercase font-semibold">Jami o'qigan</div>
+                </div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << monthIssues; %></div>
+                    <div class="text-[10px] text-slate-500 uppercase font-semibold">Bu oyda</div>
+                </div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalFav; %></div>
+                    <div class="text-[10px] text-slate-500 uppercase font-semibold">Sevimli</div>
+                </div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalRatings; %></div>
+                    <div class="text-[10px] text-slate-500 uppercase font-semibold">Sharhlar</div>
+                </div>
+            </div>
+        </div>
+
+        <%c++ if (!badges.empty()) { %>
+        <div class="mt-5 pt-4 border-t border-purple-100">
+            <p class="text-xs text-purple-600 font-semibold uppercase tracking-wide mb-2">Qo'lga kiritilgan belgilar</p>
+            <div class="flex flex-wrap gap-2">
+                <%c++ for (auto& b : badges) {
+                    auto bIcon = getOr(b, "icon", "🏅");
+                    auto bName = getOr(b, "name");
+                    auto bDesc = getOr(b, "description");
+                %>
+                <div class="bg-white border border-purple-200 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs shadow-sm" title="<%c++ Dashboard_tmp_stream << bDesc; %>">
+                    <span><%c++ Dashboard_tmp_stream << bIcon; %></span>
+                    <span class="font-semibold text-slate-700"><%c++ Dashboard_tmp_stream << bName; %></span>
+                </div>
+                <%c++ } %>
+            </div>
+        </div>
+        <%c++ } %>
+    </div>
 
     <!-- Bronlar -->
     <div class="mb-8">
@@ -231,9 +301,59 @@
         <%c++ } %>
     </div>
 
-    <div class="mt-6">
+    <!-- Sizga yoqishi mumkin -->
+    <%c++ if (!recommended.empty()) { %>
+    <div class="mt-10">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-magic text-pink-500"></i> Sizga yoqishi mumkin
+            <span class="ml-1 text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">AI tavsiya</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">O'qigan va sevimli kitoblaringiz asosida tanlangan</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <%c++ for (auto& r : recommended) {
+                auto rid    = getOr(r, "id");
+                auto rtitle = getOr(r, "title", "Kitob");
+                auto rauth  = getOr(r, "author_name");
+                auto rcover = getOr(r, "cover_image");
+                auto rlib   = getOr(r, "library_name");
+                auto rrate  = getOr(r, "average_rating");
+                auto rstat  = getOr(r, "availability_status", "available");
+                bool isAvail = (rstat == "available");
+            %>
+            <a href="/kitob/<%c++ Dashboard_tmp_stream << rid; %>"
+               class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition block">
+                <div class="h-32 bg-slate-100 flex items-center justify-center relative">
+                    <%c++ if (!rcover.empty()) { %>
+                    <img src="<%c++ Dashboard_tmp_stream << rcover; %>" class="w-full h-full object-cover" alt="">
+                    <%c++ } else { %>
+                    <i class="fas fa-book text-slate-300 text-3xl"></i>
+                    <%c++ } %>
+                    <span class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                        <%c++ Dashboard_tmp_stream << (isAvail ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"); %>">
+                        <%c++ Dashboard_tmp_stream << (isAvail ? "✅ Mavjud" : "🔒 Band"); %>
+                    </span>
+                </div>
+                <div class="p-2.5">
+                    <p class="font-semibold text-xs text-slate-800 line-clamp-2 leading-snug"><%c++ Dashboard_tmp_stream << rtitle; %></p>
+                    <%c++ if (!rauth.empty()) { %>
+                    <p class="text-[10px] text-slate-400 truncate mt-0.5"><%c++ Dashboard_tmp_stream << rauth; %></p>
+                    <%c++ } %>
+                    <%c++ if (!rrate.empty() && rrate != "0" && rrate != "0.0") { %>
+                    <span class="inline-block mt-1 text-[9px] bg-yellow-50 text-yellow-600 font-bold px-1.5 py-0.5 rounded-full">★ <%c++ Dashboard_tmp_stream << rrate; %></span>
+                    <%c++ } %>
+                </div>
+            </a>
+            <%c++ } %>
+        </div>
+    </div>
+    <%c++ } %>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
         <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
             <i class="fas fa-search"></i> Yangi kitob qidirish
+        </a>
+        <a href="/ai-maslahatchi" class="inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition">
+            <i class="fas fa-robot"></i> AI maslahatchi bilan suhbatlashish
         </a>
     </div>
 </main>

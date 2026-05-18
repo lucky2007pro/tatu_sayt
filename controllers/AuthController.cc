@@ -113,11 +113,14 @@ void AuthController::handleReg(const HttpRequestPtr& req,
     std::string cardId = "TATU" + uid.substr(0, 6);
     std::transform(cardId.begin(), cardId.end(), cardId.begin(), ::toupper);
 
+    std::string email = req->getParameter("email");
+
     Json::Value body;
     body["fullname"] = fullname;
     body["card_id"]  = cardId;
     body["phone"]    = phone;
     body["password"] = password;
+    if (!email.empty()) body["email"] = email;
 
     apiPost("/api/readers/register/", body,
         [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {

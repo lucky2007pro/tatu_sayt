@@ -52,18 +52,79 @@ void DashboardController::index(const HttpRequestPtr& req,
                 RowList issues = jsonArrayToRows(isJson,
                     {"id","book","book_title","issue_date","return_date","is_returned"});
 
-                HttpViewData data;
-                data.insert("reader_name",    updatedName);
-                data.insert("reader_card_id", cardId);
-                data.insert("reader_approved",approved);
-                data.insert("reservations",   reservations);
-                data.insert("issues",         issues);
-                data.insert("is_logged_in",   true);
-                data.insert("flash_msg",      flashMsg);
-                data.insert("flash_type",     flashType);
-                data.insert("csrf_token",     csrf);
+                // 3) Tavsiyalar (Sizga yoqishi mumkin)
+                apiGet("/api/books/recommended-for-me/?limit=8",
+                    [updatedName, cardId, approved, csrf, flashMsg, flashType, token,
+                     cb = std::move(cb), reservations, issues](bool, const Json::Value& recJson) mutable
+                {
+                    RowList recommended = jsonArrayToRows(recJson,
+                        {"id","title","author_name","cover_image","library_name",
+                         "average_rating","availability_status"});
 
-                cb(HttpResponse::newHttpViewResponse("Dashboard", data));
+                    // 4) Statistika (gamification)
+                    apiGet("/api/readers/my-stats/",
+                        [updatedName, cardId, approved, csrf, flashMsg, flashType,
+                         cb = std::move(cb), reservations, issues, recommended]
+                        (bool, const Json::Value& stats) mutable
+                    {
+                        // Statistik maydonlarni stringlashtiramiz
+                        std::string sLevel, sLevelTier, sLevelNext;
+                        std::string sTotalIssues, sReturnedIssues, sActiveIssues,
+                                    sMonthIssues, sRecentIssues,
+                                    sTotalRes, sActiveRes, sTotalFav, sTotalRatings;
+                        Json::Value badges;
+                        if (stats.isObject()) {
+                            const auto& lvl = stats["level"];
+                            if (lvl.isObject()) {
+                                if (lvl["name"].isString())  sLevel     = lvl["name"].asString();
+                                if (lvl["tier"].isInt())     sLevelTier = std::to_string(lvl["tier"].asInt());
+                                if (lvl["next_at"].isInt())  sLevelNext = std::to_string(lvl["next_at"].asInt());
+                            }
+                            const auto& m = stats["metrics"];
+                            if (m.isObject()) {
+                                auto si = [&](const char* k) { return m[k].isInt() ? std::to_string(m[k].asInt()) : std::string("0"); };
+                                sTotalIssues    = si("total_issues");
+                                sReturnedIssues = si("returned_issues");
+                                sActiveIssues   = si("active_issues");
+                                sMonthIssues    = si("month_issues");
+                                sRecentIssues   = si("recent_issues");
+                                sTotalRes       = si("total_reservations");
+                                sActiveRes      = si("active_reservations");
+                                sTotalFav       = si("total_favourites");
+                                sTotalRatings   = si("total_ratings");
+                            }
+                            if (stats["badges"].isArray()) badges = stats["badges"];
+                        }
+                        RowList badgeRows = jsonArrayToRows(badges, {"code","name","icon","description"});
+
+                        HttpViewData data;
+                        data.insert("reader_name",    updatedName);
+                        data.insert("reader_card_id", cardId);
+                        data.insert("reader_approved",approved);
+                        data.insert("reservations",   reservations);
+                        data.insert("issues",         issues);
+                        data.insert("recommended",    recommended);
+                        data.insert("badges",         badgeRows);
+                        data.insert("level_name",     sLevel.empty() ? std::string("Yangi") : sLevel);
+                        data.insert("level_tier",     sLevelTier.empty() ? std::string("1") : sLevelTier);
+                        data.insert("level_next",     sLevelNext);
+                        data.insert("total_issues",   sTotalIssues.empty() ? std::string("0") : sTotalIssues);
+                        data.insert("returned_issues",sReturnedIssues);
+                        data.insert("active_issues",  sActiveIssues);
+                        data.insert("month_issues",   sMonthIssues);
+                        data.insert("recent_issues",  sRecentIssues);
+                        data.insert("total_res",      sTotalRes);
+                        data.insert("active_res",     sActiveRes);
+                        data.insert("total_fav",      sTotalFav);
+                        data.insert("total_ratings",  sTotalRatings);
+                        data.insert("is_logged_in",   true);
+                        data.insert("flash_msg",      flashMsg);
+                        data.insert("flash_type",     flashType);
+                        data.insert("csrf_token",     csrf);
+
+                        cb(HttpResponse::newHttpViewResponse("Dashboard", data));
+                    }, token);
+                }, token);
             }, token);
         }, token);
     }, token);

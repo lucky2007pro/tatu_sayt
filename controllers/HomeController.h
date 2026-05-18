@@ -14,6 +14,7 @@ public:
         ADD_METHOD_TO(HomeController::favouriteToggle, "/sevimli/{id}/toggle", Post);
         ADD_METHOD_TO(HomeController::favouriteRemove, "/sevimli/{id}/ochir",  Post);
         ADD_METHOD_TO(HomeController::favouriteIds,    "/api/my-favourite-ids", Get);
+        ADD_METHOD_TO(HomeController::bookSearch,      "/api/book-search",     Get);
     METHOD_LIST_END
 
     void index         (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
@@ -25,4 +26,5 @@ public:
     void favouriteToggle(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
     void favouriteRemove(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb, int id);
     void favouriteIds  (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
+    void bookSearch    (const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& cb);
 };
