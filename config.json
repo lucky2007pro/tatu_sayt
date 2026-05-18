@@ -23,7 +23,7 @@
     "run_as_daemon": false,
     "use_sendfile": true,
     "use_gzip": true,
-    "client_max_body_size": "8M",
+    "client_max_body_size": "100M",
     "reuse_port": false
   },
   "plugins": [],
