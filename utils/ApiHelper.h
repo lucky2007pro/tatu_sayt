@@ -347,10 +347,37 @@ inline std::string ensureCsrf(const drogon::HttpRequestPtr& req) {
     return s->get<std::string>("csrf_token");
 }
 
+// multipart/form-data body'dan matn maydonini ajratib olish
+inline std::string extractMultipartField(const std::string& body,
+                                          const std::string& fieldName) {
+    std::string marker = "name=\"" + fieldName + "\"";
+    auto pos = body.find(marker);
+    if (pos == std::string::npos) return "";
+    // Sarlavhalar tugashi: \r\n\r\n
+    auto start = body.find("\r\n\r\n", pos);
+    if (start == std::string::npos) return "";
+    start += 4;
+    // Qiymat tugashi: keyingi boundary oldidagi \r\n--
+    auto end = body.find("\r\n--", start);
+    if (end == std::string::npos) return "";
+    return body.substr(start, end - start);
+}
+
 inline bool checkCsrf(const drogon::HttpRequestPtr& req) {
     auto s = req->session();
     if (!s->find("csrf_token")) return false;
-    auto token = req->getParameter("csrf_token");
+
+    // 1-urinish: application/x-www-form-urlencoded
+    std::string token = req->getParameter("csrf_token");
+
+    // 2-urinish: multipart/form-data body'dan
+    if (token.empty()) {
+        const auto& bv = req->getBody();
+        if (bv.size() > 0)
+            token = extractMultipartField(std::string(bv.data(), bv.size()),
+                                          "csrf_token");
+    }
+
     if (token.empty()) return false;
     return token == s->get<std::string>("csrf_token");
 }
