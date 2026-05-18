@@ -413,7 +413,10 @@ void AdminController::returnBook(const HttpRequestPtr& req,
     if (!checkCsrf(req)) { cb(errResp(403, "CSRF xato")); return; }
     if (!isAdmin(req)) { cb(redirect("/admin")); return; }
 
-    apiPost("/api/issues/" + std::to_string(id) + "/return/", Json::Value(),
+    Json::Value body;
+    body["is_returned"] = true;
+    apiPatch("/api/issues/" + std::to_string(id) + "/",
+        body,
         [req, cb = std::move(cb)](int status, const Json::Value& data) mutable {
             bool ok = status < 400;
             std::string msg = ok ? "Kitob qaytarildi deb belgilandi."
