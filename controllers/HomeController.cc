@@ -15,6 +15,8 @@ void HomeController::index(const HttpRequestPtr& req,
     std::string sort    = req->getParameter("sort");
     std::string author  = req->getParameter("author");
     std::string isbn    = req->getParameter("isbn");
+    std::string userLat = req->getParameter("user_lat");
+    std::string userLon = req->getParameter("user_lon");
     std::string pageStr = req->getParameter("page");
     int page = 1;
     if (!pageStr.empty()) {
@@ -30,6 +32,10 @@ void HomeController::index(const HttpRequestPtr& req,
     if (!sort.empty())    booksPath += "&ordering=" + drogon::utils::urlEncode(sort);
     if (!author.empty())  booksPath += "&author="   + drogon::utils::urlEncode(author);
     if (!isbn.empty())    booksPath += "&isbn="     + drogon::utils::urlEncode(isbn);
+    if (!userLat.empty() && !userLon.empty()) {
+        booksPath += "&user_lat=" + drogon::utils::urlEncode(userLat);
+        booksPath += "&user_lon=" + drogon::utils::urlEncode(userLon);
+    }
 
     bool loggedIn    = isLoggedIn(req);
     std::string name = sessionStr(req, "reader_name", "Mehmon");
@@ -39,6 +45,7 @@ void HomeController::index(const HttpRequestPtr& req,
     // 1. Kitoblar
     apiGet(booksPath, [loggedIn, name, approved, csrf,
                        search, library, section, status, sort, page, author, isbn,
+                       userLat, userLon,
                        cb = std::move(cb)](bool ok, const Json::Value& booksJson) mutable
     {
         RowList books;
@@ -53,13 +60,15 @@ void HomeController::index(const HttpRequestPtr& req,
             }
             books = jsonArrayToRows(booksJson, {"id","title","author_name","library_name",
                                                 "section_name","is_available","availability_status",
-                                                "cover_image","average_rating","ebook_file","view_count"});
+                                                "cover_image","average_rating","ebook_file","view_count",
+                                                "distance_km"});
         }
 
         // 2. Kutubxonalar (filtr uchun)
         apiGet("/api/libraries/",
             [loggedIn, name, approved, csrf,
              search, library, section, status, sort, page, author, isbn,
+             userLat, userLon,
              hasNext, hasPrev, totalCount,
              cb = std::move(cb), books = std::move(books)](bool, const Json::Value& libJson) mutable
         {
@@ -69,6 +78,7 @@ void HomeController::index(const HttpRequestPtr& req,
             apiGet("/api/sections/",
                 [loggedIn, name, approved, csrf,
                  search, library, section, status, sort, page, author, isbn,
+                 userLat, userLon,
                  hasNext, hasPrev, totalCount,
                  cb = std::move(cb), books = std::move(books),
                  libraries = std::move(libraries)](bool, const Json::Value& secJson) mutable
@@ -79,6 +89,7 @@ void HomeController::index(const HttpRequestPtr& req,
                 apiGet("/api/books/popular/",
                     [loggedIn, name, approved, csrf,
                      search, library, section, status, sort, page, author, isbn,
+                     userLat, userLon,
                      hasNext, hasPrev, totalCount,
                      cb = std::move(cb), books = std::move(books),
                      libraries = std::move(libraries),
@@ -103,6 +114,8 @@ void HomeController::index(const HttpRequestPtr& req,
                     data.insert("sel_sort",    sort);
                     data.insert("sel_author",  author);
                     data.insert("sel_isbn",    isbn);
+                    data.insert("user_lat",    userLat);
+                    data.insert("user_lon",    userLon);
                     data.insert("is_logged_in",loggedIn);
                     data.insert("reader_name", name);
                     data.insert("reader_approved", approved);
