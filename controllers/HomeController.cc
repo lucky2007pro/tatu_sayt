@@ -160,7 +160,7 @@ void HomeController::libraries(const HttpRequestPtr& req,
         [loggedIn, name, cb = std::move(cb)](bool, const Json::Value& libJson) mutable
     {
         RowList libs = jsonArrayToRows(libJson,
-            {"id","name","latitude","longitude"});
+            {"id","name","latitude","longitude","book_count"});
 
         HttpViewData data;
         data.insert("libraries",   libs);

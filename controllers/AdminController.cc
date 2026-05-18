@@ -120,7 +120,7 @@ void AdminController::books(const HttpRequestPtr& req,
     std::string flashType = sessionStr(req, "flash_type");
     if (!flashMsg.empty()) { req->session()->erase("flash_msg"); req->session()->erase("flash_type"); }
 
-    apiGet("/api/books/", [=, cb = std::move(cb)](bool, const Json::Value& bj) mutable {
+    apiGet("/api/books/?page_size=10000", [=, cb = std::move(cb)](bool, const Json::Value& bj) mutable {
         RowList books = jsonArrayToRows(bj,
             {"id","title","author_name","library_name","section_name","is_available","availability_status",
              "cover_image","ebook_file"});
@@ -387,7 +387,7 @@ void AdminController::issues(const HttpRequestPtr& req,
         {
             RowList readers = jsonArrayToRows(rj, {"id","fullname","card_id"});
 
-            apiGet("/api/books/",
+            apiGet("/api/books/?page_size=10000",
                 [csrf, flashMsg, flashType, issues, readers, cb = std::move(cb)](bool, const Json::Value& bj) mutable
             {
                 RowList books = jsonArrayToRows(bj, {"id","title"});

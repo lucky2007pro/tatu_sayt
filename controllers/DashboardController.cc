@@ -50,30 +50,20 @@ void DashboardController::index(const HttpRequestPtr& req,
                  cb = std::move(cb), reservations](bool, const Json::Value& isJson) mutable
             {
                 RowList issues = jsonArrayToRows(isJson,
-                    {"id","book","book_title","issue_date","return_date"});
+                    {"id","book","book_title","issue_date","return_date","is_returned"});
 
-                // 3) Navbat ro'yxati
-                apiGet("/api/waitlist/?mine=1",
-                    [updatedName, cardId, approved, csrf, flashMsg, flashType, token,
-                     cb = std::move(cb), reservations, issues](bool, const Json::Value& wJson) mutable
-                {
-                    RowList waitlist = jsonArrayToRows(wJson,
-                        {"id","book","book_title","position","created_at"});
+                HttpViewData data;
+                data.insert("reader_name",    updatedName);
+                data.insert("reader_card_id", cardId);
+                data.insert("reader_approved",approved);
+                data.insert("reservations",   reservations);
+                data.insert("issues",         issues);
+                data.insert("is_logged_in",   true);
+                data.insert("flash_msg",      flashMsg);
+                data.insert("flash_type",     flashType);
+                data.insert("csrf_token",     csrf);
 
-                    HttpViewData data;
-                    data.insert("reader_name",    updatedName);
-                    data.insert("reader_card_id", cardId);
-                    data.insert("reader_approved",approved);
-                    data.insert("reservations",   reservations);
-                    data.insert("issues",         issues);
-                    data.insert("waitlist",       waitlist);
-                    data.insert("is_logged_in",   true);
-                    data.insert("flash_msg",      flashMsg);
-                    data.insert("flash_type",     flashType);
-                    data.insert("csrf_token",     csrf);
-
-                    cb(HttpResponse::newHttpViewResponse("Dashboard", data));
-                }, token);
+                cb(HttpResponse::newHttpViewResponse("Dashboard", data));
             }, token);
         }, token);
     }, token);

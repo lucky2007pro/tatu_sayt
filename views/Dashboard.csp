@@ -21,7 +21,6 @@
     auto  approved     = @@.get<bool>("reader_approved");
     auto& reservations = @@.get<RowList>("reservations");
     auto& issues       = @@.get<RowList>("issues");
-    auto& waitlist     = @@.get<RowList>("waitlist");
     auto& flashMsg     = @@.get<std::string>("flash_msg");
     auto& flashType    = @@.get<std::string>("flash_type");
     auto& csrf         = @@.get<std::string>("csrf_token");
@@ -231,58 +230,6 @@
         </div>
         <%c++ } %>
     </div>
-
-    <!-- Navbat ro'yxati -->
-    <%c++ if (!waitlist.empty()) { %>
-    <div class="mt-8">
-        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <i class="fas fa-hourglass-half text-amber-500"></i> Navbatim
-            <span class="ml-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << waitlist.size(); %></span>
-        </h3>
-        <div class="space-y-3">
-            <%c++ for (auto& w : waitlist) {
-                auto wid    = getOr(w, "id");
-                auto bref   = getOr(w, "book");
-                auto bt     = getOr(w, "book_title");
-                if (bt.empty()) bt = std::string("Kitob #") + bref;
-                auto pos    = getOr(w, "position", "?");
-                auto wdate  = getOr(w, "created_at");
-            %>
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate">
-                        <i class="fas fa-clock text-amber-500 mr-1.5"></i>
-                        <%c++ Dashboard_tmp_stream << bt; %>
-                    </p>
-                    <div class="flex flex-wrap items-center gap-3 mt-1.5">
-                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
-                            🔢 Navbat: <%c++ Dashboard_tmp_stream << pos; %>
-                        </span>
-                        <%c++ if (!wdate.empty()) { %>
-                        <span class="text-xs text-slate-400"><i class="fas fa-calendar mr-1"></i><%c++ Dashboard_tmp_stream << (wdate.size() > 10 ? wdate.substr(0, 10) : wdate); %></span>
-                        <%c++ } %>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <%c++ if (!bref.empty()) { %>
-                    <a href="/kitob/<%c++ Dashboard_tmp_stream << bref; %>"
-                       class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <%c++ } %>
-                    <form method="POST" action="/kitob/<%c++ Dashboard_tmp_stream << bref; %>/navbat/chiqish"
-                          onsubmit="return confirm('Navbatdan chiqasizmi?')">
-                        <input type="hidden" name="csrf_token" value="<%c++ Dashboard_tmp_stream << csrf; %>">
-                        <button class="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
-                            <i class="fas fa-times mr-1"></i>Chiqish
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <%c++ } %>
-        </div>
-    </div>
-    <%c++ } %>
 
     <div class="mt-6">
         <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
