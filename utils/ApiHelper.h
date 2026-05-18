@@ -370,7 +370,21 @@ inline bool checkCsrf(const drogon::HttpRequestPtr& req) {
     // 1-urinish: application/x-www-form-urlencoded
     std::string token = req->getParameter("csrf_token");
 
-    // 2-urinish: multipart/form-data body'dan
+    // 2-urinish: HTTP sarlavhasidan (X-CSRF-Token)
+    if (token.empty()) {
+        token = req->getHeader("X-CSRF-Token");
+        if (token.empty()) token = req->getHeader("x-csrf-token");
+    }
+
+    // 3-urinish: JSON body'dan
+    if (token.empty()) {
+        auto json = req->getJsonObject();
+        if (json && (*json)["csrf_token"].isString()) {
+            token = (*json)["csrf_token"].asString();
+        }
+    }
+
+    // 4-urinish: multipart/form-data body'dan
     if (token.empty()) {
         const auto& bv = req->getBody();
         if (bv.size() > 0)
