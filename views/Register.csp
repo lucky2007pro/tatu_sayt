@@ -1,90 +1,84 @@
+<%inc
+#include "ViewHelper.h"
+%>
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%c++ Register_tmp_stream << PREMIUM_HEAD; %>
     <title>TATU Kutubxona | Ro'yxat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
-        .input-field { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 11px 16px; width: 100%; outline: none; transition: all .2s; font-size: 14px; }
-        .input-field:focus { border-color: #2563eb; background: #fff; }
-        .btn-primary { background: #2563eb; color: white; border-radius: 8px; font-weight: 700; transition: all .2s; }
-        .btn-primary:hover { background: #1d4ed8; }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
     <%c++
         auto& csrf     = @@.get<std::string>("csrf_token");
         auto& errorMsg = @@.get<std::string>("error_msg");
     %>
 
-    <div class="flex-grow flex items-center justify-center p-6 py-10">
-        <div class="w-full max-w-lg">
-            <a href="/" class="flex items-center justify-center gap-2 mb-8">
-                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-lg">T</div>
-                <span class="text-xl font-bold text-slate-800">TATU Kutubxona</span>
+    <div class="auth-wrapper">
+        <div class="auth-card" style="max-width:480px">
+            <a href="/" class="flex items-center justify-center gap-2.5 mb-8">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">T</div>
+                <span class="text-xl font-extrabold text-slate-800 tracking-tight">TATU Kutubxona</span>
             </a>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <div class="text-center mb-6">
-                    <h1 class="text-xl font-bold text-slate-800">Ro'yxatdan o'tish</h1>
-                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Yangi o'quvchi hisobi</p>
+            <div class="text-center mb-7">
+                <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/25">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1 class="text-xl font-extrabold text-slate-800">Ro'yxatdan o'tish</h1>
+                <p class="text-xs text-slate-400 mt-1 uppercase tracking-[0.15em] font-semibold">Yangi o'quvchi hisobi</p>
+            </div>
+
+            <%c++ if (!errorMsg.empty()) { %>
+            <div class="toast-premium toast-error mb-5">
+                <i class="fas fa-exclamation-circle"></i>
+                <%c++ Register_tmp_stream << errorMsg; %>
+            </div>
+            <%c++ } %>
+
+            <form action="/royxat" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="<%c++ Register_tmp_stream << csrf; %>">
+
+                <div class="field-float">
+                    <input type="text" name="fullname" id="fullname" placeholder=" " required>
+                    <label for="fullname"><i class="fas fa-user mr-1.5 text-xs"></i>To'liq ism</label>
                 </div>
 
-                <%c++ if (!errorMsg.empty()) { %>
-                <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5 flex items-start gap-2">
-                    <span class="mt-0.5">⚠</span>
-                    <span><%c++ Register_tmp_stream << errorMsg; %></span>
+                <div class="field-float">
+                    <input type="text" name="phone" id="phone" placeholder=" " required>
+                    <label for="phone"><i class="fas fa-phone mr-1.5 text-xs"></i>Telefon raqam</label>
                 </div>
-                <%c++ } %>
 
-                <form action="/royxat" method="POST" class="space-y-4">
-                    <input type="hidden" name="csrf_token" value="<%c++ Register_tmp_stream << csrf; %>">
-
-                    <div>
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">To'liq ism</label>
-                        <input type="text" name="fullname" placeholder="Ism Familiya" required class="input-field">
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Telefon raqam</label>
-                        <input type="text" name="phone" placeholder="+998 90 123 45 67" required class="input-field">
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Email <span class="text-slate-400 normal-case">(ixtiyoriy — bron eslatmalari uchun)</span></label>
-                        <input type="email" name="email" placeholder="siz@example.com" class="input-field">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Parol</label>
-                            <input type="password" name="password" id="pwd1" placeholder="••••••••" required class="input-field">
-                        </div>
-                        <div>
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Parolni tasdiqlang</label>
-                            <input type="password" name="password2" id="pwd2" placeholder="••••••••" required class="input-field">
-                        </div>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 text-blue-700 text-xs px-4 py-3 rounded-lg space-y-1">
-                        <p>ℹ️ Ro'yxatdan o'tgach, <strong>profilingizda</strong> kerakli kutubxona uchun karta rasmini yuklang.</p>
-                        <p class="text-blue-500">Har bir kutubxona uchun alohida karta tasdiqlanadi.</p>
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full py-3 text-sm mt-1">Ro'yxatdan o'tish</button>
-                </form>
-
-                <div class="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
-                    Hisobingiz bormi?
-                    <a href="/kirish" class="text-blue-600 font-semibold hover:text-blue-700 ml-1">Kiring</a>
+                <div class="field-float">
+                    <input type="email" name="email" id="email" placeholder=" ">
+                    <label for="email"><i class="fas fa-envelope mr-1.5 text-xs"></i>Email <span class="text-slate-300 font-normal">(ixtiyoriy)</span></label>
                 </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="field-float">
+                        <input type="password" name="password" id="pwd1" placeholder=" " required>
+                        <label for="pwd1"><i class="fas fa-key mr-1.5 text-xs"></i>Parol</label>
+                    </div>
+                    <div class="field-float">
+                        <input type="password" name="password2" id="pwd2" placeholder=" " required>
+                        <label for="pwd2"><i class="fas fa-check mr-1.5 text-xs"></i>Tasdiqlang</label>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50/80 border border-blue-200/60 rounded-xl px-4 py-3 text-xs text-blue-700 space-y-1">
+                    <p><i class="fas fa-info-circle mr-1"></i>Ro'yxatdan o'tgach, <strong>profilingizda</strong> kerakli kutubxona uchun karta rasmini yuklang.</p>
+                    <p class="text-blue-500">Har bir kutubxona uchun alohida karta tasdiqlanadi.</p>
+                </div>
+
+                <button type="submit" class="btn-prem btn-prem-success w-full py-3.5 text-sm">
+                    <i class="fas fa-user-check"></i> Ro'yxatdan o'tish
+                </button>
+            </form>
+
+            <div class="mt-7 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
+                Hisobingiz bormi?
+                <a href="/kirish" class="link-premium ml-1">Kiring</a>
             </div>
         </div>
     </div>
-
-    <footer class="py-5 text-center text-xs text-slate-300">© 2026 TATU Kutubxona</footer>
 </body>
 </html>

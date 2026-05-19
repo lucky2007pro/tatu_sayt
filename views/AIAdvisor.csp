@@ -4,32 +4,15 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%c++ AIAdvisor_tmp_stream << PREMIUM_HEAD; %>
     <title>TATU Kutubxona | AI Maslahatchi</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
-        .chat-bubble-user { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 18px 18px 4px 18px; }
-        .chat-bubble-ai   { background: white; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 18px 18px 18px 4px; }
         .chat-bubble-ai p { margin: 0 0 0.5rem 0; line-height: 1.55; }
         .chat-bubble-ai p:last-child { margin-bottom: 0; }
         .chat-bubble-ai strong { color: #0f172a; font-weight: 700; }
         .chat-bubble-ai ul, .chat-bubble-ai ol { margin: 0.25rem 0 0.5rem 1.25rem; }
         .chat-bubble-ai li { margin-bottom: 0.25rem; }
-        .typing-dot {
-            width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -40,71 +23,63 @@
 %>
 
 <!-- NAVBAR -->
-<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2">
-            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
-            <span class="font-bold text-slate-800">TATU Kutubxona</span>
+<nav class="navbar-premium sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2.5">
+            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md">T</div>
+            <span class="font-extrabold text-slate-800 tracking-tight">TATU Kutubxona</span>
         </a>
         <div class="flex items-center gap-2">
-            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
-                <i class="fas fa-book mr-1"></i>Kitoblar
-            </a>
-            <a href="/sevimlilar" class="text-xs font-semibold text-slate-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
-                <i class="fas fa-heart mr-1"></i>Sevimlilar
-            </a>
+            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-book mr-1"></i>Kitoblar</a>
+            <a href="/sevimlilar" class="text-xs font-semibold text-slate-500 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50/60 transition"><i class="fas fa-heart mr-1"></i>Sevimlilar</a>
             <%c++ if (loggedIn) { %>
-            <a href="/kabinet" class="text-xs font-semibold text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
-                <i class="fas fa-user mr-1"></i><%c++ AIAdvisor_tmp_stream << name; %>
-            </a>
+            <a href="/kabinet" class="text-xs font-semibold text-blue-600 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-user mr-1"></i><%c++ AIAdvisor_tmp_stream << name; %></a>
             <%c++ } else { %>
-            <a href="/kirish" class="text-xs font-semibold bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition">Kirish</a>
+            <a href="/kirish" class="btn-prem btn-prem-primary text-xs py-2 px-4">Kirish</a>
             <%c++ } %>
         </div>
     </div>
 </nav>
 
-<main class="max-w-3xl w-full mx-auto px-4 py-6 flex-1 flex flex-col">
+<main class="max-w-3xl w-full mx-auto px-4 py-6 flex-1 flex flex-col page-transition">
     <!-- Sarlavha -->
-    <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white text-2xl mb-3 shadow-lg">
+    <div class="text-center mb-6 fade-in-up">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white text-2xl mb-3 shadow-xl shadow-purple-500/25 float-anim">
             <i class="fas fa-robot"></i>
         </div>
-        <h1 class="text-2xl font-bold text-slate-800">AI Maslahatchi</h1>
+        <h1 class="text-2xl font-extrabold text-slate-800">AI Maslahatchi</h1>
         <p class="text-sm text-slate-400 mt-1">Gemini asosida — kitob tanlashda yordam beradi</p>
     </div>
 
-    <!-- Status banner (AI sozlanmagan bo'lsa) -->
-    <div id="ai-warning" class="hidden mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-        <i class="fas fa-exclamation-triangle mr-1"></i>
-        AI hozircha sozlanmagan. Administrator <code class="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> ni o'rnatishi kerak.
+    <!-- AI warning -->
+    <div id="ai-warning" class="hidden mb-4 toast-premium toast-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        AI hozircha sozlanmagan. Administrator <code class="bg-red-100 px-1.5 py-0.5 rounded text-xs">GEMINI_API_KEY</code> ni o'rnatishi kerak.
     </div>
 
     <!-- Chat oynasi -->
-    <div id="chat-window" class="flex-1 bg-slate-50 rounded-2xl p-4 overflow-y-auto" style="min-height: 50vh; max-height: 65vh;">
-        <!-- Salomlashish -->
-        <div class="flex gap-3 mb-4">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">
+    <div id="chat-window" class="flex-1 aurora-bg rounded-2xl p-4 overflow-y-auto border border-slate-200/60" style="min-height:50vh;max-height:65vh;background:var(--color-surface-2)">
+        <div class="flex gap-3 mb-4 fade-in-up">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0 shadow-md">
                 <i class="fas fa-robot"></i>
             </div>
-            <div class="chat-bubble-ai px-4 py-3 max-w-[85%] shadow-sm">
+            <div class="chat-bubble-ai px-4 py-3 max-w-[85%]">
                 <p>Salom! Men <strong>TATU Kutubxona AI maslahatchi</strong>man. Sizga kitob tanlashda yordam beraman. 🤖📚</p>
                 <p class="text-xs text-slate-400 mt-2">Quyidagi savollarni ko'rib chiqing yoki o'zingiznikini yozing:</p>
             </div>
         </div>
 
-        <!-- Tayyor savollar -->
         <div id="quick-prompts" class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-3 py-2 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition">
+            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition hover-lift">
                 💡 Boshlovchilar uchun yaxshi kitoblar bormi?
             </button>
-            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-3 py-2 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition">
+            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition hover-lift">
                 🚀 Texnologiya/IT haqida nima tavsiya qilasiz?
             </button>
-            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-3 py-2 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition">
+            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition hover-lift">
                 📜 O'zbek mumtoz adabiyotidan kitob tavsiya qiling
             </button>
-            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-3 py-2 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition">
+            <button class="quick-prompt text-left text-xs bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition hover-lift">
                 🧠 Psixologiya bo'yicha qiziqarli kitob bormi?
             </button>
         </div>
@@ -115,26 +90,23 @@
         <input type="hidden" name="csrf_token" id="csrf_token" value="<%c++ AIAdvisor_tmp_stream << csrf; %>">
         <textarea id="chat-input" rows="1" maxlength="1500"
                   placeholder="Savolingizni yozing..."
-                  class="flex-1 resize-none bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
-                  style="min-height: 44px; max-height: 140px;"></textarea>
+                  class="input-premium flex-1 resize-none rounded-2xl px-4 py-3 text-sm shadow-sm"
+                  style="min-height:44px;max-height:140px;"></textarea>
         <button type="submit" id="send-btn"
-                class="bg-blue-600 text-white px-5 py-3 rounded-2xl font-semibold text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                class="btn-prem btn-prem-accent px-5 py-3 rounded-2xl text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
             <i class="fas fa-paper-plane"></i>
         </button>
     </form>
-    <p class="text-[11px] text-slate-400 text-center mt-2">
-        AI ba'zan xato qilishi mumkin. Muhim qarorlarni o'zingiz tekshirib oling.
-    </p>
+    <p class="text-[11px] text-slate-400 text-center mt-2">AI ba'zan xato qilishi mumkin. Muhim qarorlarni o'zingiz tekshirib oling.</p>
 </main>
 
-<footer class="py-4 text-center text-xs text-slate-300 border-t border-slate-100 mt-auto">
-    © 2026 TATU Kutubxona — AI by Gemini
+<footer class="footer-premium py-5 text-center text-xs mt-auto">
+    <p>© 2026 TATU Kutubxona — AI by Gemini</p>
 </footer>
 
 <script>
 const CSRF_TOKEN = document.getElementById('csrf_token').value;
-let conversationHistory = [];   // [{role: 'user'|'model', content: '...'}]
-
+let conversationHistory = [];
 const chatWindow = document.getElementById('chat-window');
 const chatInput  = document.getElementById('chat-input');
 const chatForm   = document.getElementById('chat-form');
@@ -142,51 +114,34 @@ const sendBtn    = document.getElementById('send-btn');
 const warningBox = document.getElementById('ai-warning');
 const quickPrompts = document.getElementById('quick-prompts');
 
-// ── Yordamchi funksiyalar ──────────────────────────────────────────────────
 function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function appendUserMessage(text) {
     const el = document.createElement('div');
-    el.className = 'flex gap-3 mb-4 justify-end';
-    el.innerHTML = `
-        <div class="chat-bubble-user px-4 py-3 max-w-[85%] shadow-sm">
-            <p class="text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-sm flex-shrink-0">
-            <i class="fas fa-user"></i>
-        </div>
-    `;
+    el.className = 'flex gap-3 mb-4 justify-end fade-in-up';
+    el.innerHTML = `<div class="chat-bubble-user px-4 py-3 max-w-[85%]"><p class="text-sm whitespace-pre-wrap">${escapeHtml(text)}</p></div>
+        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-sm flex-shrink-0"><i class="fas fa-user"></i></div>`;
     chatWindow.appendChild(el);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
 function appendAIMessage(markdownText) {
     const el = document.createElement('div');
-    el.className = 'flex gap-3 mb-4';
+    el.className = 'flex gap-3 mb-4 fade-in-up';
     const html = (window.marked ? marked.parse(markdownText) : `<p>${escapeHtml(markdownText)}</p>`);
-    el.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">
-            <i class="fas fa-robot"></i>
-        </div>
-        <div class="chat-bubble-ai px-4 py-3 max-w-[85%] text-sm shadow-sm">${html}</div>
-    `;
+    el.innerHTML = `<div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0 shadow-md"><i class="fas fa-robot"></i></div>
+        <div class="chat-bubble-ai px-4 py-3 max-w-[85%] text-sm">${html}</div>`;
     chatWindow.appendChild(el);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
 function appendError(text) {
     const el = document.createElement('div');
-    el.className = 'flex gap-3 mb-4';
-    el.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 text-sm flex-shrink-0">
-            <i class="fas fa-exclamation"></i>
-        </div>
-        <div class="px-4 py-3 max-w-[85%] text-sm bg-red-50 border border-red-200 text-red-700 rounded-2xl">
-            ${escapeHtml(text)}
-        </div>
-    `;
+    el.className = 'flex gap-3 mb-4 fade-in-up';
+    el.innerHTML = `<div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center text-red-500 text-sm flex-shrink-0"><i class="fas fa-exclamation"></i></div>
+        <div class="px-4 py-3 max-w-[85%] text-sm bg-red-50 border border-red-200 text-red-700 rounded-2xl">${escapeHtml(text)}</div>`;
     chatWindow.appendChild(el);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -195,22 +150,13 @@ function showTyping() {
     const el = document.createElement('div');
     el.id = 'typing-indicator';
     el.className = 'flex gap-3 mb-4';
-    el.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">
-            <i class="fas fa-robot"></i>
-        </div>
-        <div class="chat-bubble-ai px-5 py-3 shadow-sm flex items-center gap-1.5">
-            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
-        </div>
-    `;
+    el.innerHTML = `<div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0 shadow-md"><i class="fas fa-robot"></i></div>
+        <div class="chat-bubble-ai px-5 py-3 flex items-center gap-1.5"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
     chatWindow.appendChild(el);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function hideTyping() {
-    const t = document.getElementById('typing-indicator');
-    if (t) t.remove();
-}
+function hideTyping() { const t = document.getElementById('typing-indicator'); if (t) t.remove(); }
 
 async function sendMessage(text) {
     if (!text.trim()) return;
@@ -220,71 +166,33 @@ async function sendMessage(text) {
     chatInput.style.height = 'auto';
     sendBtn.disabled = true;
     showTyping();
-
     try {
         const r = await fetch('/api/ai-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                message: text,
-                history: conversationHistory.slice(-8),
-                csrf_token: CSRF_TOKEN
-            })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+            body: JSON.stringify({ message: text, history: conversationHistory.slice(-8), csrf_token: CSRF_TOKEN })
         });
         hideTyping();
         const data = await r.json();
-        if (!r.ok || data.error) {
-            appendError(data.error || `Xato: HTTP ${r.status}`);
-        } else {
+        if (!r.ok || data.error) { appendError(data.error || `Xato: HTTP ${r.status}`); }
+        else {
             const reply = data.reply || '';
             appendAIMessage(reply);
-            conversationHistory.push({ role: 'user',  content: text });
+            conversationHistory.push({ role: 'user', content: text });
             conversationHistory.push({ role: 'model', content: reply });
         }
-    } catch (e) {
-        hideTyping();
-        appendError("Tarmoq xatosi: " + (e.message || e));
-    } finally {
-        sendBtn.disabled = false;
-        chatInput.focus();
-    }
+    } catch (e) { hideTyping(); appendError("Tarmoq xatosi: " + (e.message || e)); }
+    finally { sendBtn.disabled = false; chatInput.focus(); }
 }
 
-// ── Event handlers ─────────────────────────────────────────────────────────
-chatForm.addEventListener('submit', e => {
-    e.preventDefault();
-    sendMessage(chatInput.value);
-});
-
-chatInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage(chatInput.value);
-    }
-});
-
-// Auto-resize textarea
-chatInput.addEventListener('input', () => {
-    chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
-});
-
-// Quick prompts
+chatForm.addEventListener('submit', e => { e.preventDefault(); sendMessage(chatInput.value); });
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(chatInput.value); } });
+chatInput.addEventListener('input', () => { chatInput.style.height = 'auto'; chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px'; });
 document.querySelectorAll('.quick-prompt').forEach(btn => {
     btn.addEventListener('click', () => sendMessage(btn.textContent.trim().replace(/^[^\w\u0400-\u04FF\u0500-\u052F]+\s*/, '')));
 });
-
-// Status check
 fetch('/api/ai-status').then(r => r.json()).then(d => {
-    if (d && d.configured === false) {
-        warningBox.classList.remove('hidden');
-        sendBtn.disabled = true;
-        chatInput.disabled = true;
-        chatInput.placeholder = 'AI sozlanmagan...';
-    }
+    if (d && d.configured === false) { warningBox.classList.remove('hidden'); sendBtn.disabled = true; chatInput.disabled = true; chatInput.placeholder = 'AI sozlanmagan...'; }
 }).catch(() => {});
-
 chatInput.focus();
 </script>
 </body>
