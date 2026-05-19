@@ -4,8 +4,23 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <%c++ Index_tmp_stream << PREMIUM_HEAD; %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(37,99,235,.15); }
+        .book-card { transition: all .2s; }
+        .category-pill { transition: all .15s; }
+        .category-pill:hover, .category-pill.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col">
 <%c++
@@ -36,33 +51,33 @@
 %>
 
 <!-- NAVBAR -->
-<nav class="navbar-premium sticky top-0 z-50">
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
-            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md">T</div>
-            <span class="font-extrabold text-slate-800 text-lg tracking-tight">TATU Kutubxona</span>
+        <a href="/" class="flex items-center gap-2 flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">T</div>
+            <span class="font-bold text-slate-800 text-lg">TATU Kutubxona</span>
         </a>
         <form action="/" method="GET" class="flex-grow max-w-lg hidden md:flex" id="search-form">
-            <div class="flex w-full rounded-xl border-1.5 border-slate-200 overflow-hidden focus-within:border-blue-500 focus-within:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] relative transition">
+            <div class="flex w-full rounded-lg border border-slate-200 overflow-hidden focus-within:border-blue-500 relative">
                 <input type="text" name="q" id="search-input" value="<%c++ Index_tmp_stream << search; %>"
                        placeholder="Kitob nomi yoki muallif..."
                        autocomplete="off"
-                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-slate-50/80"
+                       class="flex-1 px-4 py-2 text-sm outline-none bg-slate-50"
                        onfocus="showHistory()" oninput="showHistory()" onblur="setTimeout(hideHistory,150)">
-                <button type="submit" class="px-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition">
+                <button type="submit" class="px-4 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
                     <i class="fas fa-search"></i>
                 </button>
-                <div id="search-history" class="hidden absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-xl shadow-xl z-50 max-h-48 overflow-y-auto"></div>
+                <div id="search-history" class="hidden absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-b-lg shadow-lg z-50 max-h-48 overflow-y-auto"></div>
             </div>
         </form>
         <div class="flex items-center gap-2">
-            <a href="/statistika" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition">Statistika</a>
-            <a href="/kutubxonalar" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar</a>
-            <a href="/haqida" class="hidden lg:block text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition">Haqida</a>
+            <a href="/statistika" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Statistika</a>
+            <a href="/kutubxonalar" class="hidden md:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50"><i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar</a>
+            <a href="/haqida" class="hidden lg:block text-xs font-semibold text-slate-500 hover:text-blue-600 uppercase tracking-wide px-3 py-2 rounded-lg hover:bg-blue-50">Haqida</a>
             <a href="/ai-maslahatchi" class="hidden md:flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 px-3 py-2 rounded-lg hover:shadow-md transition">
                 <i class="fas fa-robot"></i>AI
             </a>
-            <a href="/sevimlilar" class="hidden md:flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50/60 transition" id="nav-fav">
+            <a href="/sevimlilar" class="hidden md:flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-red-50 transition" id="nav-fav">
                 <i class="fas fa-heart"></i><span id="fav-count" class="hidden ml-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5"></span>
             </a>
             <%c++ if (loggedIn) { %>
@@ -71,10 +86,10 @@
                     <%c++ Index_tmp_stream << name; %>
                     <%c++ if (approved) { %><span class="w-2 h-2 bg-green-500 rounded-full"></span><%c++ } else { %><span class="w-2 h-2 bg-orange-400 rounded-full"></span><%c++ } %>
                 </a>
-                <a href="/chiqish" class="text-xs font-semibold text-red-500 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50/60 transition">Chiqish</a>
+                <a href="/chiqish" class="text-xs font-semibold text-red-500 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50 transition">Chiqish</a>
             <%c++ } else { %>
                 <a href="/kirish" class="text-xs font-semibold text-slate-600 border border-slate-200 px-4 py-2 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">Kirish</a>
-                <a href="/royxat" class="btn-prem btn-prem-primary text-xs py-2 px-4">Ro'yxat</a>
+                <a href="/royxat" class="text-xs font-semibold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Ro'yxat</a>
             <%c++ } %>
             <a href="/admin" class="text-xs font-semibold bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-700 transition hidden md:block"><i class="fas fa-shield-alt"></i></a>
         </div>
@@ -82,18 +97,15 @@
 </nav>
 
 <!-- HERO -->
-<div class="hero-premium py-20 px-4">
-    <div class="max-w-2xl mx-auto text-center relative z-10">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur border border-white/20 text-white text-2xl mb-5 float-anim shadow-xl">
-            <i class="fas fa-book-open"></i>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-black mb-3 tracking-tight">TATU Online Kutubxona</h1>
-        <p class="text-blue-200 text-lg mb-8">Kitoblarni qidiring, band qiling va o'qing</p>
+<div class="bg-gradient-to-r from-blue-600 to-sky-500 text-white py-16 px-4">
+    <div class="max-w-2xl mx-auto text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-3">TATU Online Kutubxona</h1>
+        <p class="text-blue-100 text-lg mb-8">Kitoblarni qidiring, band qiling va o'qing</p>
         <form action="/" method="GET" class="flex gap-2 max-w-lg mx-auto">
             <input type="text" name="q" value="<%c++ Index_tmp_stream << search; %>"
                    placeholder="Kitob yoki muallif nomi..."
-                   class="flex-1 px-5 py-3.5 rounded-xl text-slate-800 text-sm outline-none border-2 border-white/20 bg-white/15 placeholder-white/60 focus:bg-white/25 focus:border-white/50 backdrop-blur transition">
-            <button type="submit" class="bg-white text-blue-600 font-bold px-6 py-3.5 rounded-xl text-sm hover:bg-blue-50 transition shadow-lg shadow-blue-900/20">
+                   class="flex-1 px-5 py-3 rounded-xl text-slate-800 text-sm outline-none border-2 border-white/30 bg-white/20 placeholder-white/70 focus:bg-white/30 focus:border-white">
+            <button type="submit" class="bg-white text-blue-600 font-bold px-6 py-3 rounded-xl text-sm hover:bg-blue-50 transition">
                 <i class="fas fa-search"></i> Qidirish
             </button>
         </form>
@@ -125,7 +137,7 @@
 <%c++ } %>
 
 <!-- Filtrlar -->
-<div class="filter-bar-premium py-3 px-4">
+<div class="bg-white border-y border-slate-200 py-3 px-4">
     <form action="/" method="GET" class="max-w-7xl mx-auto flex flex-wrap gap-2 items-center">
         <%c++ if (!search.empty()) { %><input type="hidden" name="q" value="<%c++ Index_tmp_stream << search; %>"><%c++ } %>
         <input type="text" name="author" value="<%c++ Index_tmp_stream << selAuthor; %>"
@@ -229,7 +241,7 @@
             bool hasGeo = (!bLat.empty() && bLat != "0" && bLat != "0.0" && bLat != "null"
                         && !bLon.empty() && bLon != "0" && bLon != "0.0" && bLon != "null");
         %>
-        <div class="book-card-premium relative group">
+        <div class="book-card bg-white rounded-xl overflow-hidden border <%c++ Index_tmp_stream << (avail ? "border-slate-200" : (issued ? "border-orange-300" : "border-yellow-300")); %> relative group">
         <%c++ if (avail) { %>
         <button onclick="toggleFav(event,'<%c++ Index_tmp_stream << bid; %>')"
                 id="fav-<%c++ Index_tmp_stream << bid; %>"
@@ -238,7 +250,7 @@
         </button>
         <%c++ } %>
         <a href="/kitob/<%c++ Index_tmp_stream << bid; %>">
-            <div class="relative h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center book-cover-shimmer">
+            <div class="relative h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
                 <%c++ if (!bcover.empty()) { %>
                 <img src="<%c++ Index_tmp_stream << bcover; %>"
                      class="w-full h-full object-cover <%c++ if (!avail) { %>opacity-40<%c++ } %>" alt="">
@@ -572,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-<footer class="footer-premium py-6 px-4 text-center text-xs">
+<footer class="bg-slate-800 text-slate-400 text-xs py-6 px-4 text-center">
     <p><i class="fas fa-book-open text-blue-400 mr-1"></i> TATU Kutubxona &copy; 2026 &mdash; Online band qilish tizimi</p>
 </footer>
 </body>

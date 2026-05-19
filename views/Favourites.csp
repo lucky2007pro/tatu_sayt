@@ -4,8 +4,13 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <%c++ Favourites_tmp_stream << PREMIUM_HEAD; %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona | Sevimlilar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background: #f1f5f9; } </style>
 </head>
 <body class="min-h-screen flex flex-col">
 <%c++
@@ -19,62 +24,58 @@
     auto& flashType  = @@.get<std::string>("flash_type");
 %>
 
-<!-- NAVBAR -->
-<nav class="navbar-premium sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2.5">
-            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md">T</div>
-            <span class="font-extrabold text-slate-800 tracking-tight">TATU Kutubxona</span>
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
+            <span class="font-bold text-slate-800">TATU Kutubxona</span>
         </a>
         <div class="flex items-center gap-2">
-            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition">
+            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
                 <i class="fas fa-book mr-1"></i>Kitoblar
             </a>
-            <a href="/sevimlilar" class="text-xs font-semibold text-rose-600 border border-rose-200 px-3 py-2 rounded-lg bg-rose-50/60">
+            <a href="/sevimlilar" class="text-xs font-semibold text-red-600 border border-red-200 px-3 py-1.5 rounded-lg bg-red-50">
                 <i class="fas fa-heart mr-1"></i>Sevimlilar
             </a>
             <%c++ if (loggedIn) { %>
-            <a href="/kabinet" class="text-xs font-semibold text-blue-600 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition">
+            <a href="/kabinet" class="text-xs font-semibold text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
                 <i class="fas fa-user mr-1"></i><%c++ Favourites_tmp_stream << name; %>
             </a>
             <%c++ } else { %>
-            <a href="/kirish" class="btn-prem btn-prem-primary text-xs py-2 px-4">Kirish</a>
+            <a href="/kirish" class="text-xs font-semibold bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition">Kirish</a>
             <%c++ } %>
         </div>
     </div>
 </nav>
 
-<!-- Flash -->
 <%c++ if (!flashMsg.empty()) { %>
 <div class="max-w-6xl mx-auto px-4 pt-4">
-    <div class="toast-premium <%c++ if (flashType == "success") { %>toast-success<%c++ } else { %>toast-error<%c++ } %>">
+    <div class="px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
         <i class="fas <%c++ if (flashType == "success") { %>fa-check-circle<%c++ } else { %>fa-exclamation-circle<%c++ } %>"></i>
         <%c++ Favourites_tmp_stream << flashMsg; %>
     </div>
 </div>
 <%c++ } %>
 
-<main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full page-transition">
-    <div class="flex items-center justify-between mb-6 fade-in-up">
+<main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+    <div class="flex items-center justify-between mb-6">
         <div>
-            <div class="section-heading-premium text-xl">
-                <span class="icon-wrap" style="background:linear-gradient(135deg,#f43f5e,#fb7185)"><i class="fas fa-heart text-sm"></i></span>
-                Sevimli kitoblar
-            </div>
-            <p class="text-xs text-slate-400 mt-1 ml-12">Jami <strong class="text-slate-600"><%c++ Favourites_tmp_stream << favourites.size(); %></strong> ta kitob saqlangan</p>
+            <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-heart text-red-500"></i> Sevimli kitoblar
+            </h1>
+            <p class="text-xs text-slate-400 mt-0.5">Jami <strong><%c++ Favourites_tmp_stream << favourites.size(); %></strong> ta kitob saqlangan</p>
         </div>
     </div>
 
     <%c++ if (favourites.empty()) { %>
-    <div class="py-20 text-center fade-in-up">
-        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center mx-auto mb-4 shadow-sm border border-rose-100">
-            <i class="fas fa-heart-crack text-rose-300 text-3xl"></i>
+    <div class="py-20 text-center">
+        <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-heart-broken text-red-300 text-3xl"></i>
         </div>
-        <p class="text-slate-500 font-semibold">Sevimli kitoblar yo'q</p>
-        <p class="text-xs text-slate-400 mt-1">Kitob sahifasidagi <i class="fas fa-heart text-rose-400"></i> tugmasini bosing</p>
-        <a href="/" class="btn-prem btn-prem-primary mt-5 text-xs py-2.5 px-5">
-            <i class="fas fa-search"></i> Kitoblarni ko'rish
-        </a>
+        <p class="text-slate-500 font-medium">Sevimli kitoblar yo'q</p>
+        <p class="text-xs text-slate-400 mt-1">Kitob sahifasidagi <i class="fas fa-heart text-red-400"></i> tugmasini bosing</p>
+        <a href="/" class="inline-block mt-4 text-xs font-bold text-blue-600 hover:underline">Kitoblarni ko'rish →</a>
     </div>
     <%c++ } else { %>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -88,34 +89,35 @@
             bool isAvail = (bstat == "available");
             bool isIssued = (bstat == "issued");
         %>
-        <div class="book-card-premium relative group fade-in-up">
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition hover:-translate-y-1 relative group">
             <form method="POST" action="/sevimli/<%c++ Favourites_tmp_stream << bid; %>/ochir"
                   onsubmit="return confirm('Sevimlilardan olib tashlaymizmi?')"
                   class="absolute top-2 right-2 z-10 hidden group-hover:block">
                 <input type="hidden" name="csrf_token" value="<%c++ Favourites_tmp_stream << csrf; %>">
                 <button type="submit"
-                        class="w-8 h-8 bg-white/90 backdrop-blur rounded-full text-rose-500 text-xs shadow-md hover:bg-rose-50 flex items-center justify-center transition">
+                        class="w-7 h-7 bg-white/90 rounded-full text-red-500 text-xs shadow hover:bg-red-50 flex items-center justify-center">
                     <i class="fas fa-times"></i>
                 </button>
             </form>
             <a href="/kitob/<%c++ Favourites_tmp_stream << bid; %>">
-                <div class="h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative book-cover-shimmer">
+                <div class="h-40 bg-slate-100 flex items-center justify-center relative">
                     <%c++ if (!bcover.empty()) { %>
                     <img src="<%c++ Favourites_tmp_stream << bcover; %>" class="w-full h-full object-cover" alt="">
                     <%c++ } else { %>
                     <i class="fas fa-book text-slate-300 text-4xl"></i>
                     <%c++ } %>
-                    <span class="absolute bottom-2 left-2 pill-premium <%c++ if (isAvail) { %>pill-emerald<%c++ } else if (isIssued) { %>pill-amber<%c++ } else { %>pill-rose<%c++ } %>">
-                        <%c++ if (isAvail) { %>✅ Mavjud<%c++ } else if (isIssued) { %>📤 Berilgan<%c++ } else { %>🔖 Bron<%c++ } %>
-                    </span>
                 </div>
                 <div class="p-3">
                     <p class="font-semibold text-xs text-slate-800 line-clamp-2 leading-snug"><%c++ Favourites_tmp_stream << btitle; %></p>
                     <%c++ if (!bauthor.empty()) { %>
                     <p class="text-[10px] text-slate-400 mt-0.5 truncate"><%c++ Favourites_tmp_stream << bauthor; %></p>
                     <%c++ } %>
+                    <p class="text-[10px] mt-1 font-semibold
+                        <%c++ if (isAvail) { %>text-green-600<%c++ } else if (isIssued) { %>text-orange-600<%c++ } else { %>text-yellow-600<%c++ } %>">
+                        <%c++ if (isAvail) { %>✅ Mavjud<%c++ } else if (isIssued) { %>📤 Berilgan<%c++ } else { %>🔖 Bron qilingan<%c++ } %>
+                    </p>
                     <%c++ if (!brating.empty() && brating != "0" && brating != "0.0") { %>
-                    <span class="inline-block mt-1.5 pill-premium pill-amber text-[9px]">★ <%c++ Favourites_tmp_stream << brating; %></span>
+                    <p class="text-[10px] mt-0.5 text-yellow-600 font-bold">★ <%c++ Favourites_tmp_stream << brating; %></p>
                     <%c++ } %>
                 </div>
             </a>
@@ -125,8 +127,8 @@
     <%c++ } %>
 </main>
 
-<footer class="footer-premium py-6 px-4 text-center text-xs mt-auto">
-    <p>© 2026 TATU Kutubxona — Online band qilish tizimi</p>
+<footer class="py-5 text-center text-xs text-slate-300 border-t border-slate-100 mt-auto">
+    © 2026 TATU Kutubxona
 </footer>
 </body>
 </html>

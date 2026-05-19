@@ -4,8 +4,13 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <%c++ Dashboard_tmp_stream << PREMIUM_HEAD; %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona | Kabinet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style> body { font-family: 'Inter', sans-serif; background: #f1f5f9; } </style>
 </head>
 <body class="min-h-screen flex flex-col">
 <%c++
@@ -30,18 +35,25 @@
     auto& csrf         = @@.get<std::string>("csrf_token");
 %>
 
-<!-- NAVBAR -->
-<nav class="navbar-premium sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2.5">
-            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md">T</div>
-            <span class="font-extrabold text-slate-800 tracking-tight">TATU Kutubxona</span>
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">T</div>
+            <span class="font-bold text-slate-800">TATU Kutubxona</span>
         </a>
         <div class="flex items-center gap-2">
-            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-home mr-1"></i>Kitoblar</a>
-            <a href="/kutubxonalar" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar</a>
-            <a href="/profil" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50/60 transition"><i class="fas fa-user-circle mr-1"></i>Profil</a>
-            <a href="/chiqish" class="text-xs font-semibold text-red-500 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-50/60 transition"><i class="fas fa-sign-out-alt mr-1"></i>Chiqish</a>
+            <a href="/" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-home mr-1"></i>Kitoblar
+            </a>
+            <a href="/kutubxonalar" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-map-marker-alt mr-1"></i>Kutubxonalar
+            </a>
+            <a href="/profil" class="text-xs font-semibold text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+                <i class="fas fa-user-circle mr-1"></i>Profil
+            </a>
+            <a href="/chiqish" class="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                <i class="fas fa-sign-out-alt mr-1"></i>Chiqish
+            </a>
         </div>
     </div>
 </nav>
@@ -49,56 +61,60 @@
 <!-- Flash -->
 <%c++ if (!flashMsg.empty()) { %>
 <div class="max-w-4xl mx-auto px-4 pt-4">
-    <div class="toast-premium <%c++ if (flashType == "success") { %>toast-success<%c++ } else { %>toast-error<%c++ } %>">
+    <div class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium
+        <%c++ if (flashType == "success") { %>bg-green-50 border border-green-200 text-green-700<%c++ } else { %>bg-red-50 border border-red-200 text-red-700<%c++ } %>">
         <%c++ if (flashType == "success") { %>✅<%c++ } else { %>⚠️<%c++ } %>
         <%c++ Dashboard_tmp_stream << flashMsg; %>
     </div>
 </div>
 <%c++ } %>
 
-<main class="max-w-4xl mx-auto px-4 py-8 flex-1 page-transition">
+<main class="max-w-4xl mx-auto px-4 py-8 flex-1">
 
     <!-- Profil kartasi -->
-    <div class="hero-premium rounded-2xl p-6 md:p-8 mb-6 fade-in-up" style="position:relative">
-        <div class="flex items-center gap-5 relative z-10">
-            <div class="w-16 h-16 bg-white/15 backdrop-blur rounded-full flex items-center justify-center text-3xl flex-shrink-0 border border-white/20 ring-4 ring-white/10">
-                <i class="fas fa-user-circle"></i>
+    <div class="bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-2xl p-6 md:p-8 mb-6 flex items-center gap-5">
+        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="flex-1">
+            <h2 class="text-xl font-extrabold"><%c++ Dashboard_tmp_stream << name; %></h2>
+            <p class="text-blue-100 text-sm mt-0.5"><i class="fas fa-id-card mr-1"></i><%c++ Dashboard_tmp_stream << cardId; %></p>
+            <div class="mt-2">
+                <%c++ if (approved) { %>
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/20 text-white px-3 py-1 rounded-full">
+                    <i class="fas fa-check-circle text-green-300"></i> Tasdiqlangan o'quvchi
+                </span>
+                <%c++ } else { %>
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-400/30 text-white px-3 py-1 rounded-full">
+                    <i class="fas fa-clock text-orange-200"></i> Admin tasdiqlashini kutmoqda
+                </span>
+                <%c++ } %>
             </div>
-            <div class="flex-1">
-                <h2 class="text-xl font-extrabold"><%c++ Dashboard_tmp_stream << name; %></h2>
-                <p class="text-blue-200 text-sm mt-0.5"><i class="fas fa-id-card mr-1"></i><%c++ Dashboard_tmp_stream << cardId; %></p>
-                <div class="mt-2">
-                    <%c++ if (approved) { %>
-                    <span class="pill-premium bg-white/15 text-white border border-white/20"><i class="fas fa-check-circle text-green-300 mr-1"></i>Tasdiqlangan o'quvchi</span>
-                    <%c++ } else { %>
-                    <span class="pill-premium bg-orange-400/20 text-white border border-orange-300/30"><i class="fas fa-clock text-orange-200 mr-1"></i>Admin tasdiqlashini kutmoqda</span>
-                    <%c++ } %>
-                </div>
+        </div>
+        <div class="flex items-center gap-6 flex-shrink-0">
+            <div class="text-center hidden md:block">
+                <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << reservations.size(); %></div>
+                <div class="text-xs text-blue-200 mt-0.5">Faol bron</div>
             </div>
-            <div class="flex items-center gap-6 flex-shrink-0">
-                <div class="text-center hidden md:block">
-                    <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << reservations.size(); %></div>
-                    <div class="text-xs text-blue-200 mt-0.5">Faol bron</div>
-                </div>
-                <div class="text-center hidden md:block">
-                    <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << issues.size(); %></div>
-                    <div class="text-xs text-blue-200 mt-0.5">O'qigan</div>
-                </div>
+            <div class="text-center hidden md:block">
+                <div class="text-3xl font-black"><%c++ Dashboard_tmp_stream << issues.size(); %></div>
+                <div class="text-xs text-blue-200 mt-0.5">O'qigan</div>
             </div>
         </div>
     </div>
 
     <%c++ if (!approved) { %>
-    <div class="toast-premium toast-error mb-6 fade-in-up">
-        ⚠️ Hisobingiz hali tasdiqlanmagan. Admin tasdiqlashidan keyin kitoblarni band qila olasiz.
+    <div class="bg-orange-50 border border-orange-200 text-orange-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-start gap-2">
+        <span>⚠️</span>
+        <span>Hisobingiz hali tasdiqlanmagan. Admin tasdiqlashidan keyin kitoblarni band qila olasiz.</span>
     </div>
     <%c++ } %>
 
-    <!-- Gamification -->
-    <div class="gamification-card mb-8 fade-in-up-delay-1">
+    <!-- Gamification — daraja va ko'rsatkichlar -->
+    <div class="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-2xl p-5 mb-8">
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-purple-500/25">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center text-2xl shadow-md">
                     <%c++ if (levelTier == "5") { %>👑
                     <%c++ } else if (levelTier == "4") { %>🎓
                     <%c++ } else if (levelTier == "3") { %>📚
@@ -117,33 +133,37 @@
                 </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 flex-shrink-0">
-                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm border border-slate-100">
-                    <div class="text-lg font-black text-slate-800 count-up"><%c++ Dashboard_tmp_stream << totalIssues; %></div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalIssues; %></div>
                     <div class="text-[10px] text-slate-500 uppercase font-semibold">Jami o'qigan</div>
                 </div>
-                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm border border-slate-100">
-                    <div class="text-lg font-black text-slate-800 count-up"><%c++ Dashboard_tmp_stream << monthIssues; %></div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << monthIssues; %></div>
                     <div class="text-[10px] text-slate-500 uppercase font-semibold">Bu oyda</div>
                 </div>
-                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm border border-slate-100">
-                    <div class="text-lg font-black text-slate-800 count-up"><%c++ Dashboard_tmp_stream << totalFav; %></div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalFav; %></div>
                     <div class="text-[10px] text-slate-500 uppercase font-semibold">Sevimli</div>
                 </div>
-                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm border border-slate-100">
-                    <div class="text-lg font-black text-slate-800 count-up"><%c++ Dashboard_tmp_stream << totalRatings; %></div>
+                <div class="bg-white rounded-xl px-3 py-2 text-center min-w-[80px]">
+                    <div class="text-lg font-black text-slate-800"><%c++ Dashboard_tmp_stream << totalRatings; %></div>
                     <div class="text-[10px] text-slate-500 uppercase font-semibold">Sharhlar</div>
                 </div>
             </div>
         </div>
 
         <%c++ if (!badges.empty()) { %>
-        <div class="mt-5 pt-4 border-t border-purple-100/50">
+        <div class="mt-5 pt-4 border-t border-purple-100">
             <p class="text-xs text-purple-600 font-semibold uppercase tracking-wide mb-2">Qo'lga kiritilgan belgilar</p>
             <div class="flex flex-wrap gap-2">
-                <%c++ for (auto& b : badges) { auto bIcon = getOr(b, "icon", "🏅"); auto bName = getOr(b, "name"); auto bDesc = getOr(b, "description"); %>
-                <div class="pill-premium pill-purple hover-scale" title="<%c++ Dashboard_tmp_stream << bDesc; %>">
+                <%c++ for (auto& b : badges) {
+                    auto bIcon = getOr(b, "icon", "🏅");
+                    auto bName = getOr(b, "name");
+                    auto bDesc = getOr(b, "description");
+                %>
+                <div class="bg-white border border-purple-200 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs shadow-sm" title="<%c++ Dashboard_tmp_stream << bDesc; %>">
                     <span><%c++ Dashboard_tmp_stream << bIcon; %></span>
-                    <span class="font-semibold"><%c++ Dashboard_tmp_stream << bName; %></span>
+                    <span class="font-semibold text-slate-700"><%c++ Dashboard_tmp_stream << bName; %></span>
                 </div>
                 <%c++ } %>
             </div>
@@ -152,36 +172,47 @@
     </div>
 
     <!-- Bronlar -->
-    <div class="mb-8 fade-in-up-delay-2">
-        <div class="section-heading-premium mb-4">
-            <span class="icon-wrap"><i class="fas fa-calendar-check text-sm"></i></span>
-            Mening bronlarim
-            <span class="pill-premium pill-blue ml-2"><%c++ Dashboard_tmp_stream << reservations.size(); %></span>
-        </div>
+    <div class="mb-8">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-check text-blue-600"></i> Mening bronlarim
+            <span class="ml-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << reservations.size(); %></span>
+        </h3>
 
         <%c++ if (!reservations.empty()) { %>
         <div class="space-y-3">
             <%c++ for (auto& res : reservations) {
-                auto rid = getOr(res, "id"); auto bookRef = getOr(res, "book");
-                auto bt = getOr(res, "book_title"); if (bt.empty()) bt = std::string("Kitob #") + bookRef;
-                auto rdate = getOr(res, "reserved_at"); auto note = getOr(res, "note");
-                auto drStr = getOr(res, "days_remaining", "0");
+                auto rid     = getOr(res, "id");
+                auto bookRef = getOr(res, "book");
+                auto bt      = getOr(res, "book_title");
+                if (bt.empty()) bt = std::string("Kitob #") + bookRef;
+                auto rdate   = getOr(res, "reserved_at");
+                auto note    = getOr(res, "note");
+                auto drStr   = getOr(res, "days_remaining", "0");
                 int days = 0; try { days = std::stoi(drStr); } catch (...) {}
                 std::string expColor, expLabel, expIcon;
-                if (days >= 2) { expColor = "pill-emerald"; expLabel = std::to_string(days) + " kun qoldi"; expIcon = "fa-clock"; }
-                else if (days == 1) { expColor = "pill-amber"; expLabel = "1 kun qoldi"; expIcon = "fa-hourglass-half"; }
-                else if (days == 0) { expColor = "pill-amber"; expLabel = "Bugun tugaydi!"; expIcon = "fa-exclamation-triangle"; }
-                else { expColor = "pill-rose"; expLabel = "Muddati o'tdi"; expIcon = "fa-times-circle"; }
+                if (days >= 2) { expColor = "bg-green-100 text-green-700"; expLabel = std::to_string(days) + " kun qoldi"; expIcon = "fa-clock"; }
+                else if (days == 1) { expColor = "bg-yellow-100 text-yellow-700"; expLabel = "1 kun qoldi"; expIcon = "fa-hourglass-half"; }
+                else if (days == 0) { expColor = "bg-orange-100 text-orange-700"; expLabel = "Bugun tugaydi!"; expIcon = "fa-exclamation-triangle"; }
+                else { expColor = "bg-red-100 text-red-700"; expLabel = "Muddati o'tdi"; expIcon = "fa-times-circle"; }
             %>
-            <div class="card-premium p-4 flex items-center justify-between gap-4">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-4 hover:shadow-md transition">
                 <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate"><i class="fas fa-bookmark text-blue-500 mr-1.5"></i><%c++ Dashboard_tmp_stream << bt; %></p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">
+                        <i class="fas fa-bookmark text-blue-500 mr-1.5"></i>
+                        <%c++ Dashboard_tmp_stream << bt; %>
+                    </p>
                     <div class="flex flex-wrap items-center gap-2 mt-1.5">
                         <%c++ if (!rdate.empty()) { %>
-                        <span class="text-xs text-slate-400"><i class="fas fa-calendar mr-1"></i><%c++ Dashboard_tmp_stream << (rdate.size() > 10 ? rdate.substr(0, 10) : rdate); %></span>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-calendar mr-1"></i><%c++ Dashboard_tmp_stream << (rdate.size() > 10 ? rdate.substr(0, 10) : rdate); %>
+                        </span>
                         <%c++ } %>
-                        <span class="pill-premium pill-amber">🔖 Band qilingan</span>
-                        <span class="pill-premium <%c++ Dashboard_tmp_stream << expColor; %>"><i class="far <%c++ Dashboard_tmp_stream << expIcon; %> mr-1"></i><%c++ Dashboard_tmp_stream << expLabel; %></span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+                            🔖 Band qilingan
+                        </span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full <%c++ Dashboard_tmp_stream << expColor; %>">
+                            <i class="far <%c++ Dashboard_tmp_stream << expIcon; %> mr-1"></i><%c++ Dashboard_tmp_stream << expLabel; %>
+                        </span>
                         <%c++ if (!note.empty()) { %>
                         <span class="text-xs text-slate-400 italic truncate"><%c++ Dashboard_tmp_stream << note; %></span>
                         <%c++ } %>
@@ -189,90 +220,116 @@
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <%c++ if (!bookRef.empty()) { %>
-                    <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>" class="btn-prem btn-prem-ghost text-xs py-1.5 px-3"><i class="fas fa-eye"></i></a>
+                    <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>"
+                       class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-blue-400 hover:text-blue-600 transition">
+                        <i class="fas fa-eye"></i>
+                    </a>
                     <%c++ } %>
-                    <form method="POST" action="/bron/<%c++ Dashboard_tmp_stream << rid; %>/bekor" onsubmit="return confirm('Bronni bekor qilasizmi?')">
+                    <form method="POST" action="/bron/<%c++ Dashboard_tmp_stream << rid; %>/bekor"
+                          onsubmit="return confirm('Bronni bekor qilasizmi?')">
                         <input type="hidden" name="csrf_token" value="<%c++ Dashboard_tmp_stream << csrf; %>">
-                        <button type="submit" class="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition font-semibold"><i class="fas fa-times mr-1"></i>Bekor</button>
+                        <button type="submit" class="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                            <i class="fas fa-times mr-1"></i>Bekor
+                        </button>
                     </form>
                 </div>
             </div>
             <%c++ } %>
         </div>
         <%c++ } else { %>
-        <div class="card-premium p-8 text-center text-slate-400">
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
             <i class="fas fa-calendar-times text-3xl mb-2 block text-slate-200"></i>
             <p class="text-sm">Hali hech qanday bron yo'q.</p>
-            <a href="/" class="link-premium text-sm mt-3 inline-block">Kitoblarni ko'rish →</a>
+            <a href="/" class="inline-block mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                Kitoblarni ko'rish →
+            </a>
         </div>
         <%c++ } %>
     </div>
 
-    <!-- O'qish tarixi -->
-    <div class="fade-in-up-delay-3">
-        <div class="section-heading-premium mb-4">
-            <span class="icon-wrap" style="background:var(--gradient-accent)"><i class="fas fa-history text-sm"></i></span>
-            O'qish tarixim
-            <span class="pill-premium pill-purple ml-2"><%c++ Dashboard_tmp_stream << issues.size(); %></span>
-        </div>
+    <!-- O'qish tarixi (Issues) -->
+    <div>
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-history text-purple-600"></i> O'qish tarixim
+            <span class="ml-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full"><%c++ Dashboard_tmp_stream << issues.size(); %></span>
+        </h3>
 
         <%c++ if (!issues.empty()) { %>
         <div class="space-y-3">
             <%c++ for (auto& iss : issues) {
-                auto bookRef = getOr(iss, "book"); auto bt = getOr(iss, "book_title");
+                auto bookRef = getOr(iss, "book");
+                auto bt      = getOr(iss, "book_title");
                 if (bt.empty()) bt = std::string("Kitob #") + bookRef;
-                auto idate = getOr(iss, "issue_date"); auto rdate = getOr(iss, "return_date");
+                auto idate   = getOr(iss, "issue_date");
+                auto rdate   = getOr(iss, "return_date");
+                // Sana taqqoslash uchun bugun
+                bool overdue = false; // backend bilan tekshirish kerak
             %>
-            <div class="card-premium p-4 flex items-center justify-between gap-4">
+            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-4 hover:shadow-md transition">
                 <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate"><i class="fas fa-book-open text-purple-500 mr-1.5"></i><%c++ Dashboard_tmp_stream << bt; %></p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">
+                        <i class="fas fa-book-open text-purple-500 mr-1.5"></i>
+                        <%c++ Dashboard_tmp_stream << bt; %>
+                    </p>
                     <div class="flex flex-wrap items-center gap-3 mt-1.5">
                         <%c++ if (!idate.empty()) { %>
-                        <span class="text-xs text-slate-400"><i class="fas fa-arrow-right mr-1"></i>Olingan: <%c++ Dashboard_tmp_stream << idate; %></span>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-arrow-right mr-1"></i>Olingan: <%c++ Dashboard_tmp_stream << idate; %>
+                        </span>
                         <%c++ } %>
                         <%c++ if (!rdate.empty()) { %>
-                        <span class="text-xs text-slate-400"><i class="fas fa-undo mr-1"></i>Qaytarish: <%c++ Dashboard_tmp_stream << rdate; %></span>
+                        <span class="text-xs text-slate-400">
+                            <i class="fas fa-undo mr-1"></i>Qaytarish: <%c++ Dashboard_tmp_stream << rdate; %>
+                        </span>
                         <%c++ } %>
                     </div>
                 </div>
                 <%c++ if (!bookRef.empty()) { %>
-                <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>" class="btn-prem btn-prem-ghost text-xs py-1.5 px-3"><i class="fas fa-eye"></i></a>
+                <a href="/kitob/<%c++ Dashboard_tmp_stream << bookRef; %>"
+                   class="text-xs border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg hover:border-purple-400 hover:text-purple-600 transition flex-shrink-0">
+                    <i class="fas fa-eye"></i>
+                </a>
                 <%c++ } %>
             </div>
             <%c++ } %>
         </div>
         <%c++ } else { %>
-        <div class="card-premium p-8 text-center text-slate-400">
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
             <i class="fas fa-book text-3xl mb-2 block text-slate-200"></i>
             <p class="text-sm">Hali kitoblar olmagansiz.</p>
         </div>
         <%c++ } %>
     </div>
 
-    <!-- Tavsiyalar -->
+    <!-- Sizga yoqishi mumkin -->
     <%c++ if (!recommended.empty()) { %>
-    <div class="mt-10 fade-in-up">
-        <div class="section-heading-premium mb-4">
-            <span class="icon-wrap" style="background:linear-gradient(135deg,#ec4899,#f43f5e)"><i class="fas fa-magic text-sm"></i></span>
-            Sizga yoqishi mumkin
-            <span class="pill-premium pill-rose ml-2">AI tavsiya</span>
-        </div>
-        <p class="text-xs text-slate-400 mb-3 ml-12">O'qigan va sevimli kitoblaringiz asosida tanlangan</p>
+    <div class="mt-10">
+        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-magic text-pink-500"></i> Sizga yoqishi mumkin
+            <span class="ml-1 text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">AI tavsiya</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">O'qigan va sevimli kitoblaringiz asosida tanlangan</p>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <%c++ for (auto& r : recommended) {
-                auto rid = getOr(r, "id"); auto rtitle = getOr(r, "title", "Kitob");
-                auto rauth = getOr(r, "author_name"); auto rcover = getOr(r, "cover_image");
-                auto rrate = getOr(r, "average_rating"); auto rstat = getOr(r, "availability_status", "available");
+                auto rid    = getOr(r, "id");
+                auto rtitle = getOr(r, "title", "Kitob");
+                auto rauth  = getOr(r, "author_name");
+                auto rcover = getOr(r, "cover_image");
+                auto rlib   = getOr(r, "library_name");
+                auto rrate  = getOr(r, "average_rating");
+                auto rstat  = getOr(r, "availability_status", "available");
                 bool isAvail = (rstat == "available");
             %>
-            <a href="/kitob/<%c++ Dashboard_tmp_stream << rid; %>" class="book-card-premium">
-                <div class="h-32 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative book-cover-shimmer">
+            <a href="/kitob/<%c++ Dashboard_tmp_stream << rid; %>"
+               class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition block">
+                <div class="h-32 bg-slate-100 flex items-center justify-center relative">
                     <%c++ if (!rcover.empty()) { %>
                     <img src="<%c++ Dashboard_tmp_stream << rcover; %>" class="w-full h-full object-cover" alt="">
                     <%c++ } else { %>
                     <i class="fas fa-book text-slate-300 text-3xl"></i>
                     <%c++ } %>
-                    <span class="absolute top-1.5 left-1.5 pill-premium <%c++ Dashboard_tmp_stream << (isAvail ? "pill-emerald" : "pill-amber"); %>">
+                    <span class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                        <%c++ Dashboard_tmp_stream << (isAvail ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"); %>">
                         <%c++ Dashboard_tmp_stream << (isAvail ? "✅ Mavjud" : "🔒 Band"); %>
                     </span>
                 </div>
@@ -282,7 +339,7 @@
                     <p class="text-[10px] text-slate-400 truncate mt-0.5"><%c++ Dashboard_tmp_stream << rauth; %></p>
                     <%c++ } %>
                     <%c++ if (!rrate.empty() && rrate != "0" && rrate != "0.0") { %>
-                    <span class="inline-block mt-1 pill-premium pill-amber text-[9px]">★ <%c++ Dashboard_tmp_stream << rrate; %></span>
+                    <span class="inline-block mt-1 text-[9px] bg-yellow-50 text-yellow-600 font-bold px-1.5 py-0.5 rounded-full">★ <%c++ Dashboard_tmp_stream << rrate; %></span>
                     <%c++ } %>
                 </div>
             </a>
@@ -292,13 +349,17 @@
     <%c++ } %>
 
     <div class="mt-8 flex flex-wrap items-center gap-3">
-        <a href="/" class="btn-prem btn-prem-primary text-sm py-2.5 px-5"><i class="fas fa-search"></i> Yangi kitob qidirish</a>
-        <a href="/ai-maslahatchi" class="btn-prem btn-prem-accent text-sm py-2.5 px-5"><i class="fas fa-robot"></i> AI maslahatchi</a>
+        <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
+            <i class="fas fa-search"></i> Yangi kitob qidirish
+        </a>
+        <a href="/ai-maslahatchi" class="inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition">
+            <i class="fas fa-robot"></i> AI maslahatchi bilan suhbatlashish
+        </a>
     </div>
 </main>
 
-<footer class="footer-premium py-6 px-4 text-center text-xs mt-auto">
-    <p>© 2026 TATU Kutubxona</p>
+<footer class="bg-slate-800 text-slate-400 text-xs py-5 px-4 text-center mt-auto">
+    © 2026 TATU Kutubxona
 </footer>
 </body>
 </html>

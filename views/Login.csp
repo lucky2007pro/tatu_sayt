@@ -1,81 +1,81 @@
-<%inc
-#include "ViewHelper.h"
-%>
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <%c++ Login_tmp_stream << PREMIUM_HEAD; %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona | Kirish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .input-field { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 11px 16px; width: 100%; outline: none; transition: all .2s; font-size: 14px; }
+        .input-field:focus { border-color: #2563eb; background: #fff; }
+        .btn-primary { background: #2563eb; color: white; border-radius: 8px; font-weight: 700; transition: all .2s; }
+        .btn-primary:hover { background: #1d4ed8; }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
     <%c++
         auto& csrf     = @@.get<std::string>("csrf_token");
         auto& errorMsg = @@.get<std::string>("error_msg");
         auto& nextUrl  = @@.get<std::string>("next_url");
     %>
 
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <a href="/" class="flex items-center justify-center gap-2.5 mb-8">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">T</div>
-                <span class="text-xl font-extrabold text-slate-800 tracking-tight">TATU Kutubxona</span>
+    <div class="flex-grow flex items-center justify-center p-6">
+        <div class="w-full max-w-sm">
+            <a href="/" class="flex items-center justify-center gap-2 mb-8">
+                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-lg">T</div>
+                <span class="text-xl font-bold text-slate-800">TATU Kutubxona</span>
             </a>
 
-            <div class="text-center mb-7">
-                <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/25">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <h1 class="text-xl font-extrabold text-slate-800">Tizimga kirish</h1>
-                <p class="text-xs text-slate-400 mt-1 uppercase tracking-[0.15em] font-semibold">O'quvchi hisobi</p>
-            </div>
-
-            <%c++ if (!errorMsg.empty()) { %>
-            <div class="toast-premium toast-error mb-5">
-                <i class="fas fa-exclamation-circle"></i>
-                <%c++ Login_tmp_stream << errorMsg; %>
-            </div>
-            <%c++ } %>
-
-            <form action="/kirish" method="POST" class="space-y-5">
-                <input type="hidden" name="csrf_token" value="<%c++ Login_tmp_stream << csrf; %>">
-                <input type="hidden" name="next" value="<%c++ Login_tmp_stream << nextUrl; %>">
-
-                <div class="field-float">
-                    <input type="tel" name="phone" id="phone" placeholder=" " required autocomplete="tel">
-                    <label for="phone"><i class="fas fa-phone mr-1.5 text-xs"></i>Telefon raqam</label>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-xl font-bold text-slate-800">Tizimga kirish</h1>
+                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">O'quvchi hisobi</p>
                 </div>
 
-                <div class="field-float">
-                    <input type="password" name="password" id="pwd" placeholder=" " required autocomplete="current-password">
-                    <label for="pwd"><i class="fas fa-key mr-1.5 text-xs"></i>Parol</label>
-                    <button type="button" onclick="togglePwd()"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 text-sm transition z-10" tabindex="-1">
-                        <i class="fas fa-eye" id="pwd-icon"></i>
-                    </button>
+                <%c++ if (!errorMsg.empty()) { %>
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5 flex items-center gap-2">
+                    <span>⚠</span> <%c++ Login_tmp_stream << errorMsg; %>
                 </div>
+                <%c++ } %>
 
-                <button type="submit" class="btn-prem btn-prem-primary w-full py-3.5 text-sm mt-1">
-                    <i class="fas fa-arrow-right-to-bracket"></i> Kirish
-                </button>
-            </form>
+                <form action="/kirish" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="<%c++ Login_tmp_stream << csrf; %>">
+                    <input type="hidden" name="next" value="<%c++ Login_tmp_stream << nextUrl; %>">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Telefon raqam</label>
+                        <input type="tel" name="phone" placeholder="+998 90 123 45 67" required class="input-field">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Parol</label>
+                        <div class="relative">
+                            <input type="password" name="password" id="pwd" placeholder="••••••••" required class="input-field pr-10">
+                            <button type="button" onclick="togglePwd()"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">👁</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3 text-sm mt-2">Kirish</button>
+                </form>
 
-            <div class="mt-7 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
-                Hisobingiz yo'qmi?
-                <a href="/royxat" class="link-premium ml-1">Ro'yxatdan o'ting</a>
+                <div class="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
+                    Hisobingiz yo'qmi?
+                    <a href="/royxat" class="text-blue-600 font-semibold hover:text-blue-700 ml-1">Ro'yxatdan o'ting</a>
+                </div>
             </div>
 
-            <p class="text-center text-xs text-slate-300 mt-4">
-                <a href="/admin" class="hover:text-slate-500 transition"><i class="fas fa-shield-halved mr-1"></i>Admin panel</a>
+            <p class="text-center text-xs text-slate-400 mt-6">
+                <a href="/admin" class="hover:text-slate-600 transition">🛡 Admin panel</a>
             </p>
         </div>
     </div>
 
+    <footer class="py-5 text-center text-xs text-slate-300">© 2026 TATU Kutubxona</footer>
+
     <script>
     function togglePwd() {
         const p = document.getElementById('pwd');
-        const icon = document.getElementById('pwd-icon');
-        if (p.type === 'password') { p.type = 'text'; icon.className = 'fas fa-eye-slash'; }
-        else { p.type = 'password'; icon.className = 'fas fa-eye'; }
+        p.type = p.type === 'password' ? 'text' : 'password';
     }
     </script>
 </body>
