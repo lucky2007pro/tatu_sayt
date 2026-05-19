@@ -7,7 +7,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TATU Kutubxona | Kitob</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <style>
@@ -183,6 +190,120 @@
             </div>
         </div>
     </div>
+
+    <!-- Kutubxona joylashuvi -->
+    <%c++ auto bLat = getOr(book, "library_latitude");
+          auto bLon = getOr(book, "library_longitude");
+          auto bLib = getOr(book, "library_name");
+          bool hasGeo = !bLat.empty() && bLat != "0" && bLat != "0.0" && bLat != "null"
+                     && !bLon.empty() && bLon != "0" && bLon != "0.0" && bLon != "null";
+          if (hasGeo) { %>
+    <div class="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-map-marker-alt text-red-500"></i> Kutubxona joylashuvi
+                <%c++ if (!bLib.empty()) { %>
+                <span class="text-sm font-normal text-slate-500">— <%c++ BookDetail_tmp_stream << bLib; %></span>
+                <%c++ } %>
+            </h3>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span id="distance-info" class="hidden text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-full">
+                    <i class="fas fa-route mr-1"></i><span id="distance-value"></span> km
+                </span>
+                <button type="button" id="directions-yandex"
+                        class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition border border-red-200">
+                    <i class="fas fa-route"></i> Yandex Maps
+                </button>
+                <button type="button" id="directions-google"
+                        class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition border border-blue-200">
+                    <i class="fab fa-google"></i> Google Maps
+                </button>
+            </div>
+        </div>
+        <div id="lib-map" style="height: 320px; width: 100%; z-index: 0;"></div>
+        <p class="text-xs text-slate-400 px-6 py-2 border-t border-slate-50">
+            <i class="fas fa-info-circle text-blue-400 mr-1"></i>
+            Joylashuvingizni ulashsangiz, masofa va to'g'ridan-to'g'ri yo'nalish ko'rsatiladi.
+        </p>
+    </div>
+    <script>
+    (function() {
+        const lat = parseFloat("<%c++ BookDetail_tmp_stream << bLat; %>");
+        const lon = parseFloat("<%c++ BookDetail_tmp_stream << bLon; %>");
+        const libName = "<%c++ BookDetail_tmp_stream << bLib; %>";
+        if (!isFinite(lat) || !isFinite(lon)) return;
+
+        // Xaritani initsializatsiya qilish
+        const map = L.map('lib-map').setView([lat, lon], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        const libIcon = L.divIcon({
+            className: '',
+            html: '<div style="background:#dc2626;color:#fff;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,.25);border:2px solid #fff"><i class="fas fa-book" style="transform:rotate(45deg);font-size:14px"></i></div>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36]
+        });
+        const marker = L.marker([lat, lon], { icon: libIcon }).addTo(map);
+        if (libName) marker.bindPopup('<b>' + libName + '</b>').openPopup();
+
+        // Foydalanuvchi geosi cache'da bormi?
+        let userPos = null;
+        try {
+            const raw = localStorage.getItem('tatu_user_geo');
+            if (raw) {
+                const c = JSON.parse(raw);
+                if (c.lat && c.lon) userPos = { lat: parseFloat(c.lat), lon: parseFloat(c.lon) };
+            }
+        } catch {}
+
+        if (userPos) {
+            // Foydalanuvchi marker
+            const userIcon = L.divIcon({
+                className: '',
+                html: '<div style="background:#2563eb;color:#fff;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px rgba(37,99,235,.35)"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            L.marker([userPos.lat, userPos.lon], { icon: userIcon })
+              .addTo(map).bindPopup('Sizning joylashuvingiz');
+
+            // To'g'ri chiziq (yo'l emas, faqat ko'rsatkich)
+            L.polyline([[userPos.lat, userPos.lon], [lat, lon]], {
+                color: '#2563eb', weight: 3, opacity: 0.6, dashArray: '8, 8'
+            }).addTo(map);
+
+            // Bounds — ikkalasi ko'rinsin
+            map.fitBounds([[userPos.lat, userPos.lon], [lat, lon]], { padding: [40, 40] });
+
+            // Masofani hisoblash (haversine)
+            const R = 6371;
+            const toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat - userPos.lat);
+            const dLon = toRad(lon - userPos.lon);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(userPos.lat))*Math.cos(toRad(lat))*Math.sin(dLon/2)**2;
+            const dist = 2 * R * Math.asin(Math.sqrt(a));
+            document.getElementById('distance-info').classList.remove('hidden');
+            document.getElementById('distance-value').textContent = dist.toFixed(2);
+        }
+
+        // Yo'nalish tugmalari
+        document.getElementById('directions-yandex').addEventListener('click', () => {
+            const url = userPos
+                ? `https://yandex.com/maps/?rtext=${userPos.lat},${userPos.lon}~${lat},${lon}&rtt=auto`
+                : `https://yandex.com/maps/?ll=${lon},${lat}&z=16&pt=${lon},${lat},pm2rdm`;
+            window.open(url, '_blank', 'noopener');
+        });
+        document.getElementById('directions-google').addEventListener('click', () => {
+            const url = userPos
+                ? `https://www.google.com/maps/dir/${userPos.lat},${userPos.lon}/${lat},${lon}`
+                : `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+            window.open(url, '_blank', 'noopener');
+        });
+    })();
+    </script>
+    <%c++ } %>
 
     <!-- Izohlar -->
     <div class="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

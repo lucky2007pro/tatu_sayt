@@ -27,11 +27,17 @@ void BookController::detail(const HttpRequestPtr& req,
             return;
         }
         Row book = jsonObjectToRow(bookJson, {
-            "id", "title", "author_name", "library_name", "section_name",
+            "id", "title", "author_name", "library", "library_name", "section_name",
             "is_available", "availability_status", "cover_image", "description", "average_rating",
             "ratings_count", "view_count", "ebook_file",
-            "published_date", "isbn", "shelf", "row"
+            "published_date", "isbn", "shelf", "row",
+            "library_latitude", "library_longitude"
         });
+
+        // Kutubxona to'liq ma'lumotlari (manzil + telefon)
+        if (bookJson["library"].isInt()) {
+            book["library_id"] = std::to_string(bookJson["library"].asInt());
+        }
 
         // Izohlar (ratings + review)
         std::string ratingsPath = "/api/books/" + std::to_string(id) + "/ratings/";

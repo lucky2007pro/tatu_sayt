@@ -189,6 +189,27 @@
 
 <!-- Kitoblar -->
 <main class="max-w-7xl mx-auto px-4 py-8 flex-1">
+    <!-- Geolocation banner — masofalarni ko'rsatish uchun -->
+    <%c++ if (userLat.empty() || userLon.empty()) { %>
+    <div id="geo-banner" class="hidden mb-5 bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0">
+                <i class="fas fa-location-dot"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-slate-700">Joylashuvingizni ulashing</p>
+                <p class="text-xs text-slate-500">Har bir kitob uchun masofa va eng yaqin kutubxonani ko'ring</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <button id="geo-share-btn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                <i class="fas fa-location-arrow"></i> Ulashish
+            </button>
+            <button id="geo-dismiss-btn" type="button" class="text-slate-400 hover:text-slate-600 text-sm px-2 py-1" title="Yashirish">✕</button>
+        </div>
+    </div>
+    <%c++ } %>
+
     <div class="flex items-center justify-between mb-5">
         <h2 class="font-bold text-slate-800">
             <%c++ if (!search.empty()) { %>
@@ -197,6 +218,10 @@
         </h2>
         <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full"><%c++ Index_tmp_stream << totalStr; %> ta</span>
     </div>
+
+    <%c++ if (!search.empty() && books.size() > 1) { %>
+    <p class="text-xs text-slate-500 mb-3"><i class="fas fa-info-circle text-blue-400 mr-1"></i>Bir xil kitob bir nechta kutubxonada bo'lsa, har biri alohida ko'rsatiladi.</p>
+    <%c++ } %>
 
     <%c++ if (!books.empty()) { %>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -209,8 +234,12 @@
             auto bstat  = getOr(b, "availability_status", "available");
             auto blib   = getOr(b, "library_name");
             auto bdist  = getOr(b, "distance_km");
+            auto bLat   = getOr(b, "library_latitude");
+            auto bLon   = getOr(b, "library_longitude");
             bool avail  = (bstat == "available");
             bool issued = (bstat == "issued");
+            bool hasGeo = (!bLat.empty() && bLat != "0" && bLat != "0.0" && bLat != "null"
+                        && !bLon.empty() && bLon != "0" && bLon != "0.0" && bLon != "null");
         %>
         <div class="book-card bg-white rounded-xl overflow-hidden border <%c++ Index_tmp_stream << (avail ? "border-slate-200" : (issued ? "border-orange-300" : "border-yellow-300")); %> relative group">
         <%c++ if (avail) { %>
@@ -264,6 +293,14 @@
                 </div>
             </div>
         </a>
+        <%c++ if (hasGeo) { %>
+        <button type="button"
+                onclick="event.stopPropagation();openDirections('<%c++ Index_tmp_stream << bLat; %>','<%c++ Index_tmp_stream << bLon; %>','<%c++ Index_tmp_stream << blib; %>')"
+                class="absolute bottom-2 right-2 z-10 w-8 h-8 bg-white/95 hover:bg-blue-600 hover:text-white rounded-full shadow border border-slate-200 text-blue-600 text-xs flex items-center justify-center transition"
+                title="Yo'nalish">
+            <i class="fas fa-route"></i>
+        </button>
+        <%c++ } %>
         </div>
         <%c++ } %>
     </div>
@@ -477,6 +514,40 @@ function requestGeo(thenSubmit) {
     );
 }
 
+// ── Yo'nalish ochish (Yandex/Google Maps tanlovi) ────────────────────────────
+function openDirections(lat, lon, libName) {
+    if (!lat || !lon) return;
+    const cached = getCachedGeo();
+    const label = encodeURIComponent(libName || 'Kutubxona');
+    let url;
+    if (cached && cached.lat && cached.lon) {
+        // Yandex Maps: from-to yo'nalish
+        url = `https://yandex.com/maps/?rtext=${cached.lat},${cached.lon}~${lat},${lon}&rtt=auto&z=14`;
+    } else {
+        // Faqat manzilni ochamiz
+        url = `https://yandex.com/maps/?ll=${lon},${lat}&z=16&pt=${lon},${lat},pm2rdm&text=${label}`;
+    }
+    window.open(url, '_blank', 'noopener');
+}
+
+// ── Geo banner — birinchi tashrifda yumshoq taklif ──────────────────────────
+const GEO_DISMISSED_KEY = 'tatu_geo_dismissed';
+function setupGeoBanner() {
+    const banner = document.getElementById('geo-banner');
+    if (!banner) return;
+    if (getCachedGeo()) return;                                 // allaqachon ulashgan
+    if (localStorage.getItem(GEO_DISMISSED_KEY)) return;        // foydalanuvchi yopgan
+    banner.classList.remove('hidden');
+
+    const shareBtn = document.getElementById('geo-share-btn');
+    const dismissBtn = document.getElementById('geo-dismiss-btn');
+    if (shareBtn) shareBtn.addEventListener('click', () => requestGeo(true));
+    if (dismissBtn) dismissBtn.addEventListener('click', () => {
+        localStorage.setItem(GEO_DISMISSED_KEY, '1');
+        banner.classList.add('hidden');
+    });
+}
+
 // PWA service worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -486,6 +557,7 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadFavourites();
+    setupGeoBanner();
 
     // Cache'dan joylashuvni form ga qo'yamiz
     const cached = getCachedGeo();

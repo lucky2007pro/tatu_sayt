@@ -61,7 +61,7 @@ void HomeController::index(const HttpRequestPtr& req,
             books = jsonArrayToRows(booksJson, {"id","title","author_name","library_name",
                                                 "section_name","is_available","availability_status",
                                                 "cover_image","average_rating","ebook_file","view_count",
-                                                "distance_km"});
+                                                "distance_km","library_latitude","library_longitude"});
         }
 
         // 2. Kutubxonalar (filtr uchun)
